@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+<style>
+html{visibility:hidden;opacity:0;}
+html.theme-loaded{visibility:visible;animation:pageShow 1s ease-out forwards;background-color: #2d2d44;}
+@keyframes pageShow{from{opacity:0;}to{opacity:1;}}
+
+body.page-home::before,
+body.page-user::before,
+body.page-admin::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    z-index: -1;
+    animation: gradientFade 1s ease-out forwards;
+}
+
+@keyframes gradientFade {
+    from {
+        opacity: 0;
+        filter: brightness(0.3);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+</style>
+
+<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}root.style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){root.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){root.style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}}catch(e){}}document.documentElement.classList.add('theme-loaded');})();
+</script>
+	<script src="assets/js/theme-loader.js"></script>
+	<link rel="stylesheet" href="assets/css/styles.css">
+	<link rel="manifest" href="/site.webmanifest" />    <title>Oficia Clock 2.0</title>
+   <style id="universal-loader-styles">
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.6s ease;
+        }
+        
+        .header h1 {
+            font-size: 56px;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 20px;
+            opacity: 0.95;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            animation: fadeInUp 0.6s ease;
+            animation-fill-mode: both;
+        }
+        
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+        
+        .card-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .card-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .card-description {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            font-size: 14px;
+            animation: fadeIn 1s ease;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .quick-links {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 40px;
+            animation: fadeIn 1s ease;
+        }
+        
+        .quick-links h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .quick-links a {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .quick-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .header p {
+                font-size: 16px;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+/* FOOTER - Agregar al <style> existente */
+footer {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 30px;
+    text-align: center;
+    color: white;
+    animation: fadeIn 1s ease;
+}
+
+footer p {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: inline-block;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+
+footer a:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+    footer a {
+        display: block;
+        margin: 5px auto;
+        max-width: 200px;
+    }
+}
+   </style>
+
+</head>
+
+<body class="page-user">
+<!-- HTML del banner -->
+<div id="cookieBanner" class="cookie-banner" style="display: none;">
+    <div class="cookie-content">
+        <div class="cookie-text">
+            <span class="cookie-icon">🍪</span>
+            <p>
+                Utilizamos cookies propias y de terceros para mejorar nuestros servicios y mostrar información relacionada con sus preferencias mediante el análisis de sus hábitos de navegación. 
+                Si continúa navegando, consideramos que acepta su uso. Puede obtener más información en nuestra 
+                <a href="politica-cookies.html" target="_blank">Política de Cookies</a>.
+            </p>
+        </div>
+        <div class="cookie-buttons">
+            <button onclick="rechazarCookies()" class="cookie-btn cookie-btn-reject">Rechazar</button>
+            <button onclick="aceptarCookies()" class="cookie-btn cookie-btn-accept">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CSS (añadir dentro de <style> o en un archivo CSS) -->
+<style>
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #2c3e50;
+    color: white;
+    padding: 20px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    z-index: 99999;
+    animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.cookie-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.cookie-text {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    flex: 1;
+}
+
+.cookie-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.cookie-text p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cookie-text a {
+    color: #3498db;
+    text-decoration: underline;
+}
+
+.cookie-text a:hover {
+    color: #5dade2;
+}
+
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.cookie-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cookie-btn-accept {
+    background: #27ae60;
+    color: white;
+}
+
+.cookie-btn-accept:hover {
+    background: #2ecc71;
+}
+
+.cookie-btn-reject {
+    background: transparent;
+    color: white;
+    border: 2px solid #95a5a6;
+}
+
+.cookie-btn-reject:hover {
+    background: #95a5a6;
+    color: #2c3e50;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cookie-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .cookie-text {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cookie-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+}
+	
+.inline-flex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.inline-flex img {
+    width: 32px;           /* mejor tamaño fijo que % */
+    height: auto;
+}
+
+.inline-flex h1 {
+    font-size: 1.8rem;     /* ajusta si quieres */
+	margin-top:15px;
+}
+	
+</style>
+
+<!-- JavaScript (añadir antes de </body>) -->
+<script>
+// Comprobar si ya aceptó/rechazó cookies
+document.addEventListener('DOMContentLoaded', function() {
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    
+    if (!cookieConsent) {
+        // Mostrar banner después de 1 segundo
+        setTimeout(() => {
+            document.getElementById('cookieBanner').style.display = 'block';
+        }, 1000);
+    }
+});
+
+function aceptarCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    document.getElementById('cookieBanner').style.display = 'none';
+    
+    // Aquí puedes activar Google Analytics u otras cookies
+    // activarAnalytics();
+}
+
+function rechazarCookies() {
+    localStorage.setItem('cookieConsent', 'rejected');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    document.getElementById('cookieBanner').style.display = 'none';
+    
+    // Aquí puedes desactivar cookies no esenciales
+    // desactivarAnalytics();
+}
+
+// Función para verificar si aceptó cookies (usar antes de cargar analytics, etc.)
+function cookiesAceptadas() {
+    return localStorage.getItem('cookieConsent') === 'accepted';
+}
+</script>
+    <div class="container">
+        <div class="header-2">
+                <div class="inline-flex"><img src="/assets/img/favicon-96x96.png" sizes="96x96" /><h1> Oficia Clock 2.0</h1></div>
+            <p class="inline-flex" style="margin-bottom:10%;"><span class="status-indicator"></span>Estado de la API</p>
+        </div>
+        
+        <div class="cards-grid">
+            <!-- Card Empleados -->
+            <a href="login.html" class="card">
+                <span class="card-icon">👤</span>
+                <div class="card-title">Empleados</div>
+                <div class="card-description">
+                    Accede con tu email y PIN para registrar tus entradas y salidas del trabajo.
+                </div>
+                <button class="card-button">
+                    🔐 Iniciar Sesión
+                </button>
+            </a>
+            
+            <!-- Card Recuperar PIN -->
+            <a href="ver-pin.html" class="card">
+                <span class="card-icon">🔍</span>
+                <div class="card-title">Olvidé mi PIN</div>
+                <div class="card-description">
+                    ¿No recuerdas tu PIN? Consúltalo fácilmente ingresando tu email corporativo.
+                </div>
+                <button class="card-button">
+                    📧 Ver mi PIN
+                </button>
+            </a>
+            
+            <!-- Card Admin -->
+            <a href="admin-login.html" class="card admin">
+                <span class="card-icon">⚙️</span>
+                <div class="card-title">Administración</div>
+                <div class="card-description">
+                    Panel de control para gestionar empleados, sincronizar con Jibble y ver reportes.
+                </div>
+                <button class="card-button">
+                    🔧 Panel Admin
+                </button>
+            </a>
+        </div>
+        
+
+        
+        <div class="footer">
+            <p></p>
+
+        </div>
+
+<footer>
+    <p> Oficia Clock v2.0 • Desarrollado por <a href="https://oficiasistemas.es" target="_blank" style="background:none !important; padding:0px;margin-top: 0px; ">Oficia Sistemas</a> © 2025 Oficia Sistemas SL</p>
+    <a href="/privacy.html" target="_blank">Privacidad</a>
+    <a href="/legal.html" target="_blank">Aviso Legal</a>
+    <a href="/geo.html" target="_blank">Geolocalización</a>
+    <a href="/DPA.html" target="_blank">Tratamiento de Datos</a>
+	<a href="/politica-cookies.html">Cookies</a>
+   
+
+</footer>
+    </div>
+    
+    <script>
+        // Pequeña animación de bienvenida
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎉 Sistema de Fichajes cargado correctamente');
+            
+            // Check si el usuario ya tiene sesión
+            fetch('api.php?action=check_auth')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        // Usuario ya logueado - mostrar opción de ir directo a fichar
+                        const employeeCard = document.querySelector('.card[href="login.html"]');
+                        employeeCard.href = 'clockin.html';
+                        employeeCard.querySelector('.card-title').textContent = 'Fichar';
+                        employeeCard.querySelector('.card-description').textContent = 
+                            `Hola ${data.user.nombre}, ya tienes sesión iniciada. Click para fichar.`;
+                        employeeCard.querySelector('.card-button').textContent = '⏱️ Ir a Fichar';
+                    }
+                })
+                .catch(() => {
+                    // No hay sesión, todo normal
+                });
+        });
+    </script>
+</body>
+
+
+</html>

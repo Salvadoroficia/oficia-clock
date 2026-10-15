@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Test Desfichaje</title></head>
+<body>
+<h1>Test Desfichaje Masivo</h1>
+<button onclick="test()">Probar Desfichaje Masivo</button>
+<pre id="result"></pre>
+<script>
+async function test() {
+    try {
+        const res = await fetch('api.php?action=clock_out_all', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const text = await res.text();
+        document.getElementById('result').textContent = text;
+    } catch (error) {
+        document.getElementById('result').textContent = 'Error: ' + error.message;
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script>
+(function(){const t=localStorage.getItem('customTheme');if(t){try{const e=JSON.parse(t);for(const[r,a]of Object.entries(e)){if(r==='_theme_mode'){if(a==='glass')document.documentElement.setAttribute('data-theme','glass');continue}document.documentElement.style.setProperty(`--${r}`,a)}if(e['bg-grad-start']&&e['bg-grad-end']){document.documentElement.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${e['bg-grad-start']} 0%, ${e['bg-grad-end']} 100%)`)}}catch(e){}}})();
+</script>
+    <title>Personalizar Tema - Admin</title>
+    <style>
+        /* Estilos específicos para el personalizador */
+        .theme-customizer {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            height: calc(100vh - 200px);
+        }
+        
+        .controls-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+        
+        .preview-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            overflow-y: auto;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .color-input-group label {
+            flex: 1;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .color-input-group input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        .color-input-group input[type="text"] {
+            width: 90px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+        
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .preset-btn {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .preset-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .preset-colors {
+            display: flex;
+            gap: 3px;
+            margin-top: 5px;
+        }
+        
+        .preset-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-save {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+        }
+        
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-export {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        /* Preview samples */
+        .preview-section {
+            margin-bottom: 30px;
+        }
+        
+        .preview-section h4 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .preview-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 15px;
+        }
+        
+        .preview-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .preview-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .toast.show {
+            display: block;
+        }
+        
+        @media (max-width: 1024px) {
+            .theme-customizer {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                max-height: none;
+            }
+        }
+        
+        /* Glass mode para el preview */
+        [data-theme="glass"] .preview-panel {
+            background: rgba(40, 40, 70, 0.35) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        [data-theme="glass"] .preview-card {
+            background: rgba(40, 40, 70, 0.35) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        [data-theme="glass"] .preview-section h4 {
+            color: white !important;
+        }
+        
+        [data-theme="glass"] .preview-card h3,
+        [data-theme="glass"] .preview-card p {
+            color: white !important;
+        }
+        
+        [data-theme="glass"] .preview-card h2 {
+            color: white !important;
+        }
+    </style>
+</head>
+<body class="page-admin">
+    <div class="container wider">
+		               <div class="action-buttons">
+                    <button class="btn-save" onclick="saveTheme()">
+                        💾 Guardar Mi Tema
+                    </button>
+                    <button class="btn-save" onclick="saveCorporateTheme()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        🏢 Guardar como Tema Corporativo
+                    </button>
+                </div>
+                
+                <div class="action-buttons" style="margin-bottom:1em;">
+                    <button class="btn-reset" onclick="resetTheme()">
+                        🔄 Restablecer
+                    </button>
+                    <button style="display:none;" class="btn-export" onclick="exportTheme()">
+                        📥 Exportar CSS
+                    </button>
+                </div>
+        <div class="header space-between">
+            <div class="header-content">
+                <h1>🎨 Personalizar Tema</h1>
+                <p class="subtitle">Personaliza los colores de la aplicación</p>
+            </div>
+            <button class="logout-btn" onclick="window.location.href='admin.html'">
+                ← Volver al Panel
+            </button>
+        </div>
+
+        <div class="theme-customizer">
+            <!-- Panel de Controles -->
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>🎨 Temas Predefinidos</h3>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="applyPreset('default')">
+                            <span style="color:black !important;">🟣 Por Defecto</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #667eea;"></div>
+                                <div class="preset-color" style="background: #764ba2;"></div>
+                                <div class="preset-color" style="background: #1e3c72;"></div>
+                            </div>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('ocean')">
+                            <span style="color:black !important;">🌊 Océano</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #2E3192;"></div>
+                                <div class="preset-color" style="background: #1BFFFF;"></div>
+                                <div class="preset-color" style="background: #0f2027;"></div>
+                            </div>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('sunset')">
+                            <span style="color:black !important;">🌅 Atardecer</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #f46b45;"></div>
+                                <div class="preset-color" style="background: #eea849;"></div>
+                                <div class="preset-color" style="background: #f12711;"></div>
+                            </div>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('forest')">
+                            <span style="color:black !important;">🌲 Bosque</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #134E5E;"></div>
+                                <div class="preset-color" style="background: #71B280;"></div>
+                                <div class="preset-color" style="background: #0F2027;"></div>
+                            </div>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('royal')">
+                            <span style="color:black !important;">🟣 Oscuro</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #141E30;"></div>
+                                <div class="preset-color" style="background: #243B55;"></div>
+                                <div class="preset-color" style="background: #000000;"></div>
+                            </div>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('candy')">
+                            <span style="color:black !important;">🍬 Caramelo</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #D38312;"></div>
+                                <div class="preset-color" style="background: #A83279;"></div>
+                                <div class="preset-color" style="background: #8E2DE2;"></div>
+                            </div>
+                        </button>
+                        <button class="preset-btn" onclick="applyPreset('glass')">
+                            <span style="color:black !important;">❄️ Cristal IOS</span>
+                            <div class="preset-colors">
+                                <div class="preset-color" style="background: #0f0c29;"></div>
+                                <div class="preset-color" style="background: #302b63;"></div>
+                                <div class="preset-color" style="background: #24243e;"></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>👥 Fondo degradado Panel Usuarios</h3>
+                    <div class="color-input-group">
+                        <label>Inicio de fondo degradado</label>
+                        <input type="color" id="bgGradStart" onchange="updateColor('bg-grad-start', this.value)">
+                        <input type="text" id="bgGradStartText" oninput="updateColorFromText('bg-grad-start', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Fin de fondo degradado</label>
+                        <input type="color" id="bgGradEnd" onchange="updateColor('bg-grad-end', this.value)">
+                        <input type="text" id="bgGradEndText" oninput="updateColorFromText('bg-grad-end', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🔐 Fondo degradado Panel Admin</h3>
+                    <div class="color-input-group">
+                        <label>Inicio de fondo degradado</label>
+                        <input type="color" id="bgAdminStart" onchange="updateColor('bg-admin-start', this.value)">
+                        <input type="text" id="bgAdminStartText" oninput="updateColorFromText('bg-admin-start', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Fin de fondo degradado</label>
+                        <input type="color" id="bgAdminEnd" onchange="updateColor('bg-admin-end', this.value)">
+                        <input type="text" id="bgAdminEndText" oninput="updateColorFromText('bg-admin-end', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📝 Colores de Texto</h3>
+                    <div class="color-input-group">
+                        <label>Texto principal</label>
+                        <input type="color" id="textMain" onchange="updateColor('text-main', this.value)">
+                        <input type="text" id="textMainText" oninput="updateColorFromText('text-main', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Texto secundario</label>
+                        <input type="color" id="textSub" onchange="updateColor('text-sub', this.value)">
+                        <input type="text" id="textSubText" oninput="updateColorFromText('text-sub', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Texto apagado</label>
+                        <input type="color" id="textMuted" onchange="updateColor('text-muted', this.value)">
+                        <input type="text" id="textMutedText" oninput="updateColorFromText('text-muted', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>🕐 Color reloj/primario</label>
+                        <input type="color" id="textPrimary" onchange="updateColor('text-primary', this.value)">
+                        <input type="text" id="textPrimaryText" oninput="updateColorFromText('text-primary', this.value)">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎯 Botones de Fichaje</h3>
+                    <div class="color-input-group">
+                        <label>Entrada (inicio)</label>
+                        <input type="color" id="btnInStart" onchange="updateColor('btn-in-start', this.value)">
+                        <input type="text" id="btnInStartText" oninput="updateColorFromText('btn-in-start', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Entrada (fin)</label>
+                        <input type="color" id="btnInEnd" onchange="updateColor('btn-in-end', this.value)">
+                        <input type="text" id="btnInEndText" oninput="updateColorFromText('btn-in-end', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Salida (inicio)</label>
+                        <input type="color" id="btnOutStart" onchange="updateColor('btn-out-start', this.value)">
+                        <input type="text" id="btnOutStartText" oninput="updateColorFromText('btn-out-start', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Salida (fin)</label>
+                        <input type="color" id="btnOutEnd" onchange="updateColor('btn-out-end', this.value)">
+                        <input type="text" id="btnOutEndText" oninput="updateColorFromText('btn-out-end', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Descanso (inicio)</label>
+                        <input type="color" id="btnBreakStart" onchange="updateColor('btn-break-start', this.value)">
+                        <input type="text" id="btnBreakStartText" oninput="updateColorFromText('btn-break-start', this.value)">
+                    </div>
+                    <div class="color-input-group">
+                        <label>Descanso (fin)</label>
+                        <input type="color" id="btnBreakEnd" onchange="updateColor('btn-break-end', this.value)">
+                        <input type="text" id="btnBreakEndText" oninput="updateColorFromText('btn-break-end', this.value)">
+                    </div>
+                </div>
+
+ 
+            </div>
+
+            <!-- Panel de Preview -->
+            <div class="preview-panel">
+                <div class="preview-section">
+                    <h4>Vista Previa - Gradientes</h4>
+                    <div class="preview-card" style="background: linear-gradient(135deg, var(--bg-grad-start), var(--bg-grad-end)); color: white; padding: 40px; text-align: center;">
+                        <h2>🟣 Fondo Panel Usuario</h2>
+                        <p>Este es el fondo de las páginas de usuario (login, fichajes, etc.)</p>
+                    </div>
+                    <div class="preview-card" style="background: linear-gradient(135deg, var(--bg-admin-start), var(--bg-admin-end)); color: white; padding: 40px; text-align: center;">
+                        <h2>🔐 Fondo Panel Admin</h2>
+                        <p>Este es el fondo del panel de administración</p>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <h4>Vista Previa - Botones de Fichaje</h4>
+                    <div class="preview-card">
+                        <div class="preview-buttons">
+                            <button class="preview-btn" style="background: linear-gradient(135deg, var(--btn-in-start), var(--btn-in-end));">
+                                ▶️ Entrada
+                            </button>
+                            <button class="preview-btn" style="background: linear-gradient(135deg, var(--btn-out-start), var(--btn-out-end));">
+                                ⏹️ Salida
+                            </button>
+                            <button class="preview-btn" style="background: linear-gradient(135deg, var(--btn-break-start), var(--btn-break-end));">
+                                ⏸️ Descanso
+                            </button>
+                            <button class="preview-btn" style="background: #6c757d;">
+                                ▶️ Secundario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <h4>Vista Previa - Tarjetas</h4>
+                    <div class="preview-card">
+                        <h3 style="margin-bottom: 10px;">📊 Tarjeta de ejemplo</h3>
+                        <p style="color: var(--text-sub);">Esta es una tarjeta con el estilo por defecto de la aplicación.</p>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">Texto apagado de ejemplo</p>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <h4>Vista Previa - Reloj</h4>
+                    <div class="preview-card">
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 32px; font-weight: bold; color: var(--text-primary); font-family: 'Courier New', monospace;">
+                                🕐 12:34:56
+                            </div>
+                            <div style="font-size: 14px; color: var(--text-sub); margin-top: 8px;">
+                                04/02/2026
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Valores por defecto
+        const defaultTheme = {
+            'bg-grad-start': '#667eea',
+            'bg-grad-end': '#764ba2',
+            'bg-admin-start': '#1e3c72',
+            'bg-admin-end': '#2a5298',
+            'btn-in-start': '#56ab2f',
+            'btn-in-end': '#a8e063',
+            'btn-out-start': '#eb3349',
+            'btn-out-end': '#f45c43',
+            'btn-break-start': '#f093fb',
+            'btn-break-end': '#f5576c',
+            'text-main': '#333333',
+            'text-sub': '#666666',
+            'text-muted': '#999999',
+            'text-primary': '#667eea'
+        };
+
+        // Presets
+        const presets = {
+            default: defaultTheme,
+            ocean: {
+                'bg-grad-start': '#2E3192',
+                'bg-grad-end': '#1BFFFF',
+                'bg-admin-start': '#0f2027',
+                'bg-admin-end': '#2c5364',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c'
+            },
+            sunset: {
+                'bg-grad-start': '#f46b45',
+                'bg-grad-end': '#eea849',
+                'bg-admin-start': '#f12711',
+                'bg-admin-end': '#f5af19',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c'
+            },
+            forest: {
+                'bg-grad-start': '#134E5E',
+                'bg-grad-end': '#71B280',
+                'bg-admin-start': '#0F2027',
+                'bg-admin-end': '#203A43',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c'
+            },
+            royal: {
+                'bg-grad-start': '#141E30',
+                'bg-grad-end': '#243B55',
+                'bg-admin-start': '#000000',
+                'bg-admin-end': '#434343',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c'
+            },
+            candy: {
+                'bg-grad-start': '#D38312',
+                'bg-grad-end': '#A83279',
+                'bg-admin-start': '#8E2DE2',
+                'bg-admin-end': '#4A00E0',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c'
+            },
+            glass: {
+                'bg-grad-start': '#0f0c29',
+                'bg-grad-end': '#302b63',
+                'bg-admin-start': '#24243e',
+                'bg-admin-end': '#302b63',
+                'btn-in-start': '#00d4ff',
+                'btn-in-end': '#090979',
+                'btn-out-start': '#ff416c',
+                'btn-out-end': '#ff4b2b',
+                'btn-break-start': '#f7971e',
+                'btn-break-end': '#ffd200',
+                'glass-bg': 'rgba(40, 40, 70, 0.35)',
+                'glass-border': 'rgba(255, 255, 255, 0.15)',
+                'glass-blur': 'blur(16px)',
+                'glass-shadow': '0 12px 40px rgba(0,0,0,0.4)'
+            }
+        };
+
+        // Cargar tema guardado o valores por defecto
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('customTheme');
+            const theme = savedTheme ? JSON.parse(savedTheme) : defaultTheme;
+            
+            for (const [key, value] of Object.entries(theme)) {
+                const kebabKey = key.replace(/_/g, '-');
+                document.documentElement.style.setProperty(`--${kebabKey}`, value);
+                
+                // Actualizar inputs
+                const colorInput = document.getElementById(key.replace(/-/g, '') .replace(/([A-Z])/g, (m, p1) => p1));
+                const textInput = document.getElementById(key.replace(/-/g, '').replace(/([A-Z])/g, (m, p1) => p1) + 'Text');
+                
+                if (colorInput) colorInput.value = value;
+                if (textInput) textInput.value = value;
+            }
+        }
+
+        // Actualizar color desde el color picker
+        function updateColor(varName, value) {
+            document.documentElement.style.setProperty(`--${varName}`, value);
+            const textInput = document.getElementById(varName.replace(/-/g, '').replace(/([a-z])([A-Z])/g, '$1$2') + 'Text');
+            if (textInput) textInput.value = value;
+        }
+
+        // Actualizar color desde el input de texto
+        function updateColorFromText(varName, value) {
+            if (/^#[0-9A-F]{6}$/i.test(value)) {
+                document.documentElement.style.setProperty(`--${varName}`, value);
+                const colorInput = document.getElementById(varName.replace(/-/g, '').replace(/([a-z])([A-Z])/g, '$1$2'));
+                if (colorInput) colorInput.value = value;
+            }
+        }
+
+        // Aplicar preset
+        function applyPreset(presetName) {
+            const preset = presets[presetName];
+            
+            // Primero limpiamos el atributo theme
+            document.documentElement.removeAttribute('data-theme');
+            
+            // Aplicamos las variables del preset
+            for (const [key, value] of Object.entries(preset)) {
+                document.documentElement.style.setProperty(`--${key}`, value);
+                
+                // Actualizar inputs si existen
+                const colorInput = document.getElementById(key.replace(/-/g, ''));
+                const textInput = document.getElementById(key.replace(/-/g, '') + 'Text');
+                if (colorInput) colorInput.value = value;
+                if (textInput) textInput.value = value;
+            }
+            
+            // Si es glass, aplicar data-theme
+            if (presetName === 'glass') {
+                document.documentElement.setAttribute('data-theme', 'glass');
+                console.log('✅ data-theme="glass" aplicado');
+            }
+            
+            showToast('✅ Tema ' + presetName + ' aplicado');
+        }
+
+        // Guardar tema
+        async function saveTheme() {
+            const theme = {};
+            const vars = ['bg-grad-start', 'bg-grad-end', 'bg-admin-start', 'bg-admin-end',
+                         'btn-in-start', 'btn-in-end', 'btn-out-start', 'btn-out-end',
+                         'btn-break-start', 'btn-break-end',
+                         'text-main', 'text-sub', 'text-muted', 'text-primary',
+                         'glass-bg', 'glass-border', 'glass-blur', 'glass-shadow'];
+            
+            vars.forEach(varName => {
+                const value = getComputedStyle(document.documentElement).getPropertyValue(`--${varName}`).trim();
+                if (value) theme[varName] = value;
+            });
+            
+            // Guardar también el atributo data-theme si existe
+            const dataTheme = document.documentElement.getAttribute('data-theme');
+            if (dataTheme) {
+                theme['_theme_mode'] = dataTheme;
+            }
+            
+            localStorage.setItem('customTheme', JSON.stringify(theme));
+            
+            // Guardar en el servidor (tema personal del admin)
+            try {
+                const response = await fetch('api.php?action=save_theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme })
+                });
+                
+                if (response.ok) {
+                    showToast('✅ Tu tema personal guardado');
+                } else {
+                    showToast('⚠️ Guardado localmente');
+                }
+            } catch (error) {
+                showToast('⚠️ Guardado localmente');
+            }
+        }
+
+        // Guardar como tema corporativo (SOLO ADMIN)
+async function saveCorporateTheme() {
+    if (!confirm('¿Guardar este tema como el tema corporativo para TODOS los usuarios?')) {
+        return;
+    }
+    
+    const theme = {};
+    const vars = ['bg-grad-start', 'bg-grad-end', 'bg-admin-start', 'bg-admin-end',
+                 'btn-in-start', 'btn-in-end', 'btn-out-start', 'btn-out-end',
+                 'btn-break-start', 'btn-break-end',
+                 'text-main', 'text-sub', 'text-muted', 'text-primary',
+                 'glass-bg', 'glass-border', 'glass-blur', 'glass-shadow'];
+    
+    vars.forEach(varName => {
+        const value = getComputedStyle(document.documentElement).getPropertyValue(`--${varName}`).trim();
+        if (value) theme[varName] = value;
+    });
+    
+    const dataTheme = document.documentElement.getAttribute('data-theme');
+    if (dataTheme) {
+        theme['_theme_mode'] = dataTheme;
+    }
+    
+    try {
+        const response = await fetch('api.php?action=save_corporate_theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ theme })
+        });
+        
+        // Ver qué devuelve el servidor
+        const responseText = await response.text();
+        console.log('Respuesta del servidor:', responseText);
+        
+        // Intentar parsear como JSON
+        try {
+            const data = JSON.parse(responseText);
+            
+            if (response.ok && data.success) {
+                showToast('🏢 ¡Tema corporativo guardado! Todos los usuarios lo verán.');
+            } else {
+                showToast('❌ Error: ' + (data.error || 'No se pudo guardar'));
+            }
+        } catch (parseError) {
+            // Si no es JSON, mostrar el HTML/error
+            console.error('Respuesta no es JSON:', responseText);
+            showToast('❌ Error del servidor. Revisa la consola (F12)');
+        }
+    } catch (error) {
+        showToast('❌ Error de conexión');
+        console.error('Error:', error);
+    }
+}
+
+        // Restablecer tema
+        function resetTheme() {
+            if (confirm('¿Seguro que quieres restablecer el tema por defecto?')) {
+                localStorage.removeItem('customTheme');
+                applyPreset('default');
+                showToast('🔄 Tema restablecido');
+            }
+        }
+
+        // Exportar CSS
+        function exportTheme() {
+            const vars = ['bg-grad-start', 'bg-grad-end', 'bg-admin-start', 'bg-admin-end',
+                         'btn-in-start', 'btn-in-end', 'btn-out-start', 'btn-out-end',
+                         'btn-break-start', 'btn-break-end',
+                         'text-main', 'text-sub', 'text-muted', 'text-primary'];
+            
+            let css = ':root {\n';
+            vars.forEach(varName => {
+                const value = getComputedStyle(document.documentElement).getPropertyValue(`--${varName}`).trim();
+                css += `    --${varName}: ${value};\n`;
+            });
+            css += '}';
+            
+            const blob = new Blob([css], { type: 'text/css' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tema-personalizado.css';
+            a.click();
+            
+            showToast('📥 CSS exportado');
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', loadTheme);
+    </script>
+</body>
+</html>

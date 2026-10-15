@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html{visibility:hidden;opacity:0;}
+html.theme-loaded{visibility:visible;animation:pageShow 1s ease-out forwards;background-color: #2d2d44;}
+@keyframes pageShow{from{opacity:0;}to{opacity:1;}}
+
+body.page-home::before,
+body.page-user::before,
+body.page-admin::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    z-index: -1;
+    animation: gradientFade 1s ease-out forwards;
+}
+
+@keyframes gradientFade {
+    from {
+        opacity: 0;
+        filter: brightness(0.3);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+</style>
+
+<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}root.style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){root.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){root.style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}}catch(e){}}document.documentElement.classList.add('theme-loaded');})();
+</script>
+	<script src="assets/js/theme-loader.js"></script>
+	<link rel="stylesheet" href="assets/css/styles.css">
+    <title>Mi Tema Personal</title>
+    <style>
+        .theme-selector {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .preset-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 3px solid transparent;
+        }
+        
+        .preset-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .preset-card.active {
+            border-color: #667eea;
+        }
+        
+        .preset-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .preset-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .preset-preview {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .actions button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body class="page-user">
+    <div class="container theme-selector">
+        <div class="header">
+            <h1>🎨 Mi Tema Personal</h1>
+            <p class="subtitle">Personaliza la apariencia de tu panel</p>
+        </div>
+
+        <div class="card">
+            <div class="info-box">
+                <strong>ℹ️ Información:</strong> Puedes personalizar los colores de tu panel o usar el tema corporativo.
+            </div>
+
+            <h3 style="margin-bottom: 15px;">Temas Disponibles</h3>
+            
+            <div class="preset-grid">
+                <div class="preset-card" onclick="selectTheme('corporate')">
+                    <div class="preset-icon">🏢</div>
+                    <div class="preset-name">Tema Corporativo</div>
+                    <small style="color: #666;">Por defecto</small>
+                </div>
+
+                <div class="preset-card" onclick="selectTheme('ocean')">
+                    <div class="preset-icon">🌊</div>
+                    <div class="preset-name">Océano</div>
+                    <div class="preset-preview">
+                        <div class="color-dot" style="background: #2E3192;"></div>
+                        <div class="color-dot" style="background: #1BFFFF;"></div>
+                    </div>
+                </div>
+
+                <div class="preset-card" onclick="selectTheme('sunset')">
+                    <div class="preset-icon">🌅</div>
+                    <div class="preset-name">Atardecer</div>
+                    <div class="preset-preview">
+                        <div class="color-dot" style="background: #f46b45;"></div>
+                        <div class="color-dot" style="background: #eea849;"></div>
+                    </div>
+                </div>
+
+                <div class="preset-card" onclick="selectTheme('forest')">
+                    <div class="preset-icon">🌲</div>
+                    <div class="preset-name">Bosque</div>
+                    <div class="preset-preview">
+                        <div class="color-dot" style="background: #134E5E;"></div>
+                        <div class="color-dot" style="background: #71B280;"></div>
+                    </div>
+                </div>
+
+                <div class="preset-card" onclick="selectTheme('royal')">
+                    <div class="preset-icon">👑</div>
+                    <div class="preset-name">Real</div>
+                    <div class="preset-preview">
+                        <div class="color-dot" style="background: #141E30;"></div>
+                        <div class="color-dot" style="background: #243B55;"></div>
+                    </div>
+                </div>
+
+                <div class="preset-card" onclick="selectTheme('glass')">
+                    <div class="preset-icon">❄️</div>
+                    <div class="preset-name">Glass Dark</div>
+                    <div class="preset-preview">
+                        <div class="color-dot" style="background: #0f0c29;"></div>
+                        <div class="color-dot" style="background: #302b63;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn-primary" onclick="savePersonalTheme()">
+                    💾 Guardar Mi Tema
+                </button>
+                <button class="btn-danger" onclick="resetToCorporate()">
+                    🔄 Usar Tema Corporativo
+                </button>
+                <button class="btn-primary" onclick="window.location.href='clockin.html'">
+                    ← Volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/theme-loader.js"></script>
+    <script>
+        const presets = {
+            corporate: null, // null = usar tema corporativo
+            ocean: {
+                'bg-grad-start': '#2E3192',
+                'bg-grad-end': '#1BFFFF',
+                'bg-admin-start': '#0f2027',
+                'bg-admin-end': '#2c5364',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c',
+                'text-main': '#333333',
+                'text-sub': '#666666',
+                'text-muted': '#999999',
+                'text-primary': '#2E3192'
+            },
+            sunset: {
+                'bg-grad-start': '#f46b45',
+                'bg-grad-end': '#eea849',
+                'bg-admin-start': '#f12711',
+                'bg-admin-end': '#f5af19',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c',
+                'text-main': '#333333',
+                'text-sub': '#666666',
+                'text-muted': '#999999',
+                'text-primary': '#f46b45'
+            },
+            forest: {
+                'bg-grad-start': '#134E5E',
+                'bg-grad-end': '#71B280',
+                'bg-admin-start': '#0F2027',
+                'bg-admin-end': '#203A43',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c',
+                'text-main': '#333333',
+                'text-sub': '#666666',
+                'text-muted': '#999999',
+                'text-primary': '#134E5E'
+            },
+            royal: {
+                'bg-grad-start': '#141E30',
+                'bg-grad-end': '#243B55',
+                'bg-admin-start': '#000000',
+                'bg-admin-end': '#434343',
+                'btn-in-start': '#56ab2f',
+                'btn-in-end': '#a8e063',
+                'btn-out-start': '#eb3349',
+                'btn-out-end': '#f45c43',
+                'btn-break-start': '#f093fb',
+                'btn-break-end': '#f5576c',
+                'text-main': '#333333',
+                'text-sub': '#666666',
+                'text-muted': '#999999',
+                'text-primary': '#243B55'
+            },
+            glass: {
+                'bg-grad-start': '#0f0c29',
+                'bg-grad-end': '#302b63',
+                'bg-admin-start': '#24243e',
+                'bg-admin-end': '#302b63',
+                'btn-in-start': '#00d4ff',
+                'btn-in-end': '#090979',
+                'btn-out-start': '#ff416c',
+                'btn-out-end': '#ff4b2b',
+                'btn-break-start': '#f7971e',
+                'btn-break-end': '#ffd200',
+                'text-main': '#333333',
+                'text-sub': '#666666',
+                'text-muted': '#999999',
+                'text-primary': '#ffffff',
+                '_theme_mode': 'glass'
+            }
+        };
+
+        let selectedTheme = 'corporate';
+
+        function selectTheme(themeName) {
+            selectedTheme = themeName;
+            
+            // Marcar como activo
+            document.querySelectorAll('.preset-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Vista previa
+            const theme = presets[themeName];
+            if (theme) {
+                applyThemePreview(theme);
+            } else {
+                // Cargar tema corporativo para preview
+                fetch('api.php?action=get_corporate_theme')
+                    .then(r => r.json())
+                    .then(corpTheme => applyThemePreview(corpTheme));
+            }
+        }
+
+        function applyThemePreview(theme) {
+            for (const [key, value] of Object.entries(theme)) {
+                if (key === '_theme_mode') {
+                    if (value === 'glass') {
+                        document.documentElement.setAttribute('data-theme', 'glass');
+                    } else {
+                        document.documentElement.removeAttribute('data-theme');
+                    }
+                    continue;
+                }
+                document.documentElement.style.setProperty(`--${key}`, value);
+            }
+            
+            // Actualizar gradientes
+            if (theme['bg-grad-start'] && theme['bg-grad-end']) {
+                const bg = `linear-gradient(135deg, ${theme['bg-grad-start']}, ${theme['bg-grad-end']})`;
+                document.documentElement.style.setProperty('--bg-gradient', bg);
+            }
+        }
+
+        async function savePersonalTheme() {
+            const theme = presets[selectedTheme];
+            
+            // Si es tema corporativo (null), eliminamos el tema personal
+            if (selectedTheme === 'corporate') {
+                return resetToCorporate();
+            }
+            
+            if (!theme) {
+                alert('Por favor selecciona un tema primero');
+                return;
+            }
+            
+            try {
+                // Guardar en servidor
+                const response = await fetch('api.php?action=save_user_theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme })
+                });
+                
+                if (response.ok) {
+                    // También guardar en localStorage
+                    localStorage.setItem('customTheme', JSON.stringify(theme));
+                    alert('✅ Tu tema personal ha sido guardado');
+                    window.location.href = 'clockin.html';
+                } else {
+                    alert('❌ Error al guardar. Asegúrate de estar autenticado.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión');
+            }
+        }
+
+        async function resetToCorporate() {
+            if (!confirm('¿Volver al tema corporativo? Se eliminará tu tema personal.')) {
+                return;
+            }
+            
+            try {
+                // Eliminar del servidor
+                const response = await fetch('api.php?action=delete_user_theme', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    // Eliminar de localStorage
+                    localStorage.removeItem('customTheme');
+                    alert('✅ Ahora usas el tema corporativo');
+                    window.location.reload();
+                } else {
+                    alert('❌ Error al resetear');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error de conexión');
+            }
+        }
+    </script>
+</body>
+</html>

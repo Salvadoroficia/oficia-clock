@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+	<link rel="manifest" href="/site.webmanifest" />    <title>Reportes - Sistema de Fichajes</title>
+	<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;const style=root.style;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}if(t['bg-grad-start']&&t['bg-grad-end']){const styleTag=document.createElement('style');styleTag.textContent=`body{background:linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%) !important;background-attachment:fixed !important;}`;document.head.appendChild(styleTag)}}catch(e){}}})();
+</script>
+
+    <link rel="stylesheet" href="assets/css/styles.css">
+	<script src="assets/js/theme-loader.js"></script>
+</head>
+<body class="page-admin">
+    <div class="container">
+        <div class="header">
+            <h1>📊 Reportes de Fichajes</h1>
+            <a href="admin.html" class="btn-back">← Volver al Admin</a>
+        </div>
+
+        <div class="card">
+            <h2>🔍 Configurar Reporte</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Tipo de Reporte</label>
+                    <select id="tipoReporte" onchange="actualizarFechas()">
+                        <option value="semanal">Semanal (últimos 7 días)</option>
+                        <option value="mensual" selected>Mensual (último mes)</option>
+                        <option value="trimestral">Trimestral (3 meses)</option>
+                        <option value="personalizado">Personalizado</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="fechaDesdeGroup">
+                    <label>Fecha Desde</label>
+                    <input type="date" id="fechaDesde">
+                </div>
+
+                <div class="form-group" id="fechaHastaGroup">
+                    <label>Fecha Hasta</label>
+                    <input type="date" id="fechaHasta">
+                </div>
+
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <select id="usuarioFiltro">
+                        <option value="todos">Todos los usuarios</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-grid">
+                <button class="btn btn-primary" onclick="generarReporte()">
+                    <span>📊</span> Generar Reporte
+                </button>
+                <button class="btn btn-success" onclick="descargarHTML()" id="btnDescargarHTML" style="display: none;">
+                    <span>💾</span> Descargar HTML
+                </button>
+                <button class="btn btn-info" onclick="descargarCSV()" id="btnDescargarCSV" style="display: none;">
+                    <span>📄</span> Descargar CSV
+                </button>
+            </div>
+
+            <div id="message" class="message"></div>
+        </div>
+
+        <div id="reportePreview">
+            <div class="preview-header">
+                <h2>Vista Previa del Reporte</h2>
+                <div class="preview-actions">
+                    <button class="btn btn-secondary" onclick="cerrarPreview()">✕ Cerrar</button>
+                </div>
+            </div>
+            <div class="preview-content" id="reporteContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let reporteData = null;
+
+        // Cargar al inicio
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar admin
+            try {
+                const response = await fetch('api.php?action=admin_check', { method: 'POST' });
+                const data = await response.json();
+                if (!data.authenticated) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+            } catch (error) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            // Cargar usuarios
+            await cargarUsuarios();
+            
+            // Establecer fechas por defecto
+            actualizarFechas();
+        });
+
+        async function cargarUsuarios() {
+            try {
+                const response = await fetch('api.php?action=get_users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('usuarioFiltro');
+                    data.users.forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.id;
+                        option.textContent = user.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+            }
+        }
+
+        function actualizarFechas() {
+            const tipo = document.getElementById('tipoReporte').value;
+            const fechaHasta = new Date();
+            let fechaDesde = new Date();
+
+            const desdeGroup = document.getElementById('fechaDesdeGroup');
+            const hastaGroup = document.getElementById('fechaHastaGroup');
+
+            if (tipo === 'personalizado') {
+                desdeGroup.style.display = 'flex';
+                hastaGroup.style.display = 'flex';
+                fechaDesde.setDate(fechaHasta.getDate() - 30);
+            } else {
+                desdeGroup.style.display = 'none';
+                hastaGroup.style.display = 'none';
+
+                switch (tipo) {
+                    case 'semanal':
+                        fechaDesde.setDate(fechaHasta.getDate() - 7);
+                        break;
+                    case 'mensual':
+                        fechaDesde.setMonth(fechaHasta.getMonth() - 1);
+                        break;
+                    case 'trimestral':
+                        fechaDesde.setMonth(fechaHasta.getMonth() - 3);
+                        break;
+                }
+            }
+
+            document.getElementById('fechaDesde').value = fechaDesde.toISOString().split('T')[0];
+            document.getElementById('fechaHasta').value = fechaHasta.toISOString().split('T')[0];
+        }
+
+async function generarReporte() {
+    const tipo = document.getElementById('tipoReporte').value;
+    const fechaDesde = document.getElementById('fechaDesde').value;
+    const fechaHasta = document.getElementById('fechaHasta').value;
+    const usuarioId = document.getElementById('usuarioFiltro').value;
+
+    const message = document.getElementById('message');
+    message.style.display = 'none';
+
+    const reportePreview = document.getElementById('reportePreview');
+    const reporteContent = document.getElementById('reporteContent');
+    
+    reporteContent.innerHTML = '<div class="spinner"></div>';
+    reportePreview.style.display = 'block';
+
+    try {
+        const params = new URLSearchParams({
+            action: 'generar_reporte_con_breaks',
+            fecha_desde: fechaDesde,
+            fecha_hasta: fechaHasta,
+            usuario_id: usuarioId
+        });
+
+        const response = await fetch(`api.php?${params}`);
+        const data = await response.json();
+
+        if (data.success) {
+            reporteData = data;
+            mostrarReporteConBreaks(data);
+            
+            document.getElementById('btnDescargarHTML').style.display = 'inline-flex';
+            document.getElementById('btnDescargarCSV').style.display = 'inline-flex';
+        } else {
+            message.textContent = '❌ ' + (data.error || 'Error generando reporte');
+            message.className = 'message error';
+            message.style.display = 'block';
+            reportePreview.style.display = 'none';
+        }
+    } catch (error) {
+        message.textContent = '❌ Error de conexión: ' + error.message;
+        message.className = 'message error';
+        message.style.display = 'block';
+        reportePreview.style.display = 'none';
+    }
+}
+
+function mostrarReporteConBreaks(data) {
+    const content = document.getElementById('reporteContent');
+    
+    let html = `
+        <h2 style="margin-bottom: 20px;">Reporte de Fichajes y Descansos</h2>
+        <p style="color: #666; margin-bottom: 30px;">
+            Período: ${new Date(data.periodo.desde).toLocaleDateString('es-ES')} - 
+            ${new Date(data.periodo.hasta).toLocaleDateString('es-ES')}
+        </p>
+    `;
+
+    // Resumen con descansos
+    html += '<div class="stats-summary">';
+    html += `
+        <div class="stat-card">
+            <div class="number">${data.resumen.total_fichajes}</div>
+            <div class="label">Total Fichajes</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">${parseFloat(data.resumen.horas_fichadas).toFixed(1)}h</div>
+            <div class="label">Horas Fichadas</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="number">${parseFloat(data.resumen.horas_breaks).toFixed(1)}h</div>
+            <div class="label">Horas Descanso</div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);">
+            <div class="number">${parseFloat(data.resumen.horas_netas).toFixed(1)}h</div>
+            <div class="label">Horas Trabajadas Netas</div>
+        </div>
+    `;
+    html += '</div>';
+
+    // Explicación
+    html += `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 20px 0;">
+            <strong>📊 Cálculo:</strong> 
+            Horas Trabajadas Netas = Horas Fichadas (${data.resumen.horas_fichadas.toFixed(1)}h) - 
+            Horas Descanso (${data.resumen.horas_breaks.toFixed(1)}h) = 
+            <strong>${data.resumen.horas_netas.toFixed(1)}h</strong>
+        </div>
+    `;
+
+    // Tabla de fichajes
+    html += '<h3 style="margin: 30px 0 15px 0;">Detalle de Fichajes</h3>';
+    html += '<table><thead><tr>';
+    html += '<th>Fecha</th><th>Hora</th><th>Usuario</th><th>Tipo</th><th>Horas</th><th>Dispositivo</th>';
+    html += '</tr></thead><tbody>';
+
+    data.fichajes.forEach(f => {
+        const fecha = new Date(f.fecha_hora);
+        const tipo = f.tipo === 'In' ? 
+            '<span class="badge badge-in">📥 Entrada</span>' : 
+            '<span class="badge badge-out">📤 Salida</span>';
+        
+        html += `<tr>
+            <td>${fecha.toLocaleDateString('es-ES')}</td>
+            <td><strong>${fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</strong></td>
+            <td>${f.nombre}</td>
+            <td>${tipo}</td>
+            <td>${f.horas_trabajadas ? parseFloat(f.horas_trabajadas).toFixed(2) + 'h' : '-'}</td>
+            <td>${f.dispositivo || '-'}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+
+    // Tabla de descansos
+    if (data.breaks && data.breaks.length > 0) {
+        html += '<h3 style="margin: 30px 0 15px 0;">☕ Descansos Registrados</h3>';
+        html += '<table><thead><tr>';
+        html += '<th>Fecha</th><th>Usuario</th><th>Inicio</th><th>Fin</th><th>Duración</th>';
+        html += '</tr></thead><tbody>';
+
+        data.breaks.forEach(b => {
+            // Parsear fechas correctamente (MySQL devuelve formato 'YYYY-MM-DD HH:MM:SS')
+            // Reemplazar espacio por 'T' para que JavaScript lo interprete correctamente como hora local
+            const inicioStr = b.inicio.replace(' ', 'T');
+            const finStr = b.fin ? b.fin.replace(' ', 'T') : null;
+            
+            const fecha = new Date(inicioStr);
+            const horaInicio = fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+            const horaFin = finStr ? new Date(finStr).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'}) : '-';
+            
+            // Calcular duración correcta desde inicio y fin
+            let duracion = 'En curso';
+            if (finStr) {
+                const inicioDate = new Date(inicioStr);
+                const finDate = new Date(finStr);
+                const duracionMinutosReal = Math.floor((finDate - inicioDate) / 60000);
+                const horas = Math.floor(duracionMinutosReal / 60);
+                const minutos = duracionMinutosReal % 60;
+                duracion = horas > 0 ? `${horas}h ${minutos}m` : `${minutos} min`;
+            }
+
+            html += `<tr>
+                <td>${fecha.toLocaleDateString('es-ES')}</td>
+                <td>${b.nombre}</td>
+                <td>${horaInicio}</td>
+                <td>${horaFin}</td>
+                <td><strong>${duracion}</strong></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+    }
+
+    // Resumen por usuario CON DESCANSOS
+    if (data.por_usuario && data.por_usuario.length > 0) {
+        html += '<h3 style="margin: 30px 0 15px 0;">Resumen por Usuario (Con Descansos)</h3>';
+        html += '<table><thead><tr>';
+        html += '<th>Usuario</th><th>Fichajes</th><th>Horas Fichadas</th><th>Descansos</th><th>Horas Netas</th><th>Días</th>';
+        html += '</tr></thead><tbody>';
+
+        data.por_usuario.forEach(u => {
+            const horasDescanso = (u.minutos_breaks / 60).toFixed(1);
+            
+            html += `<tr>
+                <td><strong>${u.nombre}</strong></td>
+                <td>${u.total_fichajes}</td>
+                <td>${parseFloat(u.horas_fichadas || 0).toFixed(1)}h</td>
+                <td style="color: #f5576c;">${horasDescanso}h</td>
+                <td style="color: #56ab2f; font-weight: bold;">${parseFloat(u.horas_netas || 0).toFixed(1)}h</td>
+                <td>${u.dias_trabajados}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+    }
+
+    content.innerHTML = html;
+}
+
+
+        function mostrarReporte(data) {
+            const content = document.getElementById('reporteContent');
+            
+            let html = `
+                <h2 style="margin-bottom: 20px;">Reporte de Fichajes</h2>
+                <p style="color: #666; margin-bottom: 30px;">
+                    Período: ${new Date(data.periodo.desde).toLocaleDateString('es-ES')} - 
+                    ${new Date(data.periodo.hasta).toLocaleDateString('es-ES')}
+                </p>
+            `;
+
+            // Resumen
+            html += '<div class="stats-summary">';
+            html += `
+                <div class="stat-card">
+                    <div class="number">${data.resumen.total_fichajes}</div>
+                    <div class="label">Total Fichajes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">${data.resumen.total_usuarios}</div>
+                    <div class="label">Usuarios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">${parseFloat(data.resumen.total_horas).toFixed(1)}h</div>
+                    <div class="label">Horas Trabajadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">${data.resumen.dias_laborables}</div>
+                    <div class="label">Días Laborables</div>
+                </div>
+            `;
+            html += '</div>';
+
+            // Tabla de fichajes
+            html += '<h3 style="margin: 30px 0 15px 0;">Detalle de Fichajes</h3>';
+            html += '<table><thead><tr>';
+            html += '<th>Fecha</th><th>Hora</th><th>Usuario</th><th>Tipo</th><th>Horas</th><th>Dispositivo</th>';
+            html += '</tr></thead><tbody>';
+
+            data.fichajes.forEach(f => {
+                const fecha = new Date(f.fecha_hora);
+                const tipo = f.tipo === 'In' ? 
+                    '<span class="badge badge-in">📥 Entrada</span>' : 
+                    '<span class="badge badge-out">📤 Salida</span>';
+                
+                html += `<tr>
+                    <td>${fecha.toLocaleDateString('es-ES')}</td>
+                    <td><strong>${fecha.toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}</strong></td>
+                    <td>${f.nombre}</td>
+                    <td>${tipo}</td>
+                    <td>${f.horas_trabajadas ? parseFloat(f.horas_trabajadas).toFixed(2) + 'h' : '-'}</td>
+                    <td>${f.dispositivo || '-'}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+
+            // Resumen por usuario
+            if (data.por_usuario && data.por_usuario.length > 0) {
+                html += '<h3 style="margin: 30px 0 15px 0;">Resumen por Usuario</h3>';
+                html += '<table><thead><tr>';
+                html += '<th>Usuario</th><th>Fichajes</th><th>Horas</th><th>Días Trabajados</th>';
+                html += '</tr></thead><tbody>';
+
+                data.por_usuario.forEach(u => {
+                    html += `<tr>
+                        <td><strong>${u.nombre}</strong></td>
+                        <td>${u.total_fichajes}</td>
+                        <td>${parseFloat(u.total_horas).toFixed(1)}h</td>
+                        <td>${u.dias_trabajados}</td>
+                    </tr>`;
+                });
+
+                html += '</tbody></table>';
+            }
+
+            content.innerHTML = html;
+        }
+
+function descargarHTML() {
+    if (!reporteData) return;
+
+    const content = document.getElementById('reporteContent').innerHTML;
+    const htmlCompleto = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Fichajes y Descansos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 { color: #333; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        tr:hover { background: #f8f9fa; }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-in {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-out {
+            background: #cce5ff;
+            color: #004085;
+        }
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        ${content}
+        <p style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+            Generado el ${new Date().toLocaleString('es-ES')}
+        </p>
+    </div>
+</body>
+</html>
+    `;
+
+    const blob = new Blob([htmlCompleto], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte_completo_${reporteData.periodo.desde}_${reporteData.periodo.hasta}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const message = document.getElementById('message');
+    message.textContent = '✅ Reporte HTML descargado correctamente';
+    message.className = 'message success';
+    message.style.display = 'block';
+    setTimeout(() => message.style.display = 'none', 3000);
+}
+
+// ACTUALIZAR LA FUNCIÓN descargarCSV() para incluir breaks
+
+function descargarCSV() {
+    if (!reporteData) return;
+
+    let csv = 'Tipo,Fecha,Hora,Usuario,Tipo Registro,Horas/Duración,Dispositivo/Nota\n';
+    
+    // Fichajes
+    reporteData.fichajes.forEach(f => {
+        const fecha = new Date(f.fecha_hora);
+        csv += `Fichaje,${fecha.toLocaleDateString('es-ES')},`;
+        csv += `${fecha.toLocaleTimeString('es-ES')},`;
+        csv += `"${f.nombre}",`;
+        csv += `${f.tipo},`;
+        csv += `${f.horas_trabajadas || ''},`;
+        csv += `"${f.dispositivo || ''}"\n`;
+    });
+    
+    // Descansos
+    if (reporteData.breaks) {
+        reporteData.breaks.forEach(b => {
+            const fecha = new Date(b.inicio);
+            const horaInicio = new Date(b.inicio).toLocaleTimeString('es-ES');
+            csv += `Descanso,${fecha.toLocaleDateString('es-ES')},`;
+            csv += `${horaInicio},`;
+            csv += `"${b.nombre}",`;
+            csv += `Break,`;
+            csv += `${b.duracion_minutos || ''} min,`;
+            csv += `"${b.nota || ''}"\n`;
+        });
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte_completo_${reporteData.periodo.desde}_${reporteData.periodo.hasta}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const message = document.getElementById('message');
+    message.textContent = '✅ Reporte CSV descargado correctamente';
+    message.className = 'message success';
+    message.style.display = 'block';
+    setTimeout(() => message.style.display = 'none', 3000);
+}
+
+        function cerrarPreview() {
+            document.getElementById('reportePreview').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

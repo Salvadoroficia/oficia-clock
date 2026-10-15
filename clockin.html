@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<link rel="manifest" href="/site.webmanifest" />    <title>Dashboard - Fichajes</title>
+	<link rel="stylesheet" href="assets/css/horarios-calendario.css?v=2">
+<style>
+html{visibility:hidden;opacity:0;}
+html.theme-loaded{visibility:visible;animation:pageShow 1s ease-out forwards;background-color: #2d2d44;}
+@keyframes pageShow{from{opacity:0;}to{opacity:1;}}
+
+body.page-home::before,
+body.page-user::before,
+body.page-admin::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    z-index: -1;
+    animation: gradientFade 1s ease-out forwards;
+}
+
+@keyframes gradientFade {
+    from {
+        opacity: 0;
+        filter: brightness(0.3);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+</style>
+
+<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}root.style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){root.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){root.style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}}catch(e){}}document.documentElement.classList.add('theme-loaded');})();
+</script>
+	<script src="assets/js/theme-loader.js"></script>
+	<link rel="stylesheet" href="assets/css/styles.css">
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.21/index.global.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.21/locales/es.global.min.js"></script>
+	<link rel="stylesheet" href="assets/css/horarios-calendario.css">
+<style>
+:root { --nav-h: 68px; }
+body  { padding-bottom: var(--nav-h) !important; }
+
+/* Secciones — solo visible la activa */
+.card[data-tab]         { display: none !important; }
+.card[data-tab].tab-on  { display: block !important; }
+
+@keyframes tabIn {
+    from { opacity:0; transform:translateY(10px) scale(0.99); }
+    to   { opacity:1; transform:none; }
+}
+.card[data-tab].tab-on { animation: tabIn 0.25s cubic-bezier(0.34,1.2,0.64,1); }
+
+/* Nav inferior */
+.user-nav {
+    position:fixed; bottom:0; left:0; right:0; height:var(--nav-h);
+    background: var(--card-bg, #fff);
+    border-top:1px solid rgba(0,0,0,0.1);
+    box-shadow:0 -4px 20px rgba(0,0,0,0.08);
+    display:flex; align-items:center; justify-content:space-around;
+    z-index:9999; padding-bottom:env(safe-area-inset-bottom,0);
+}
+.user-nav-btn {
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:6px 10px; border-radius:12px; cursor:pointer;
+    border:none; background:transparent; font-family:inherit; color:#aaa;
+    transition:all 0.22s cubic-bezier(0.34,1.56,0.64,1); min-width:54px; flex:1;
+}
+.user-nav-btn .ni { font-size:20px; transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1); line-height:1; }
+.user-nav-btn .nl { font-size:9px; font-weight:700; }
+.user-nav-btn.on    { color: var(--btn-in-start, #667eea); background:rgba(102,126,234,0.1); }
+.user-nav-btn.on .ni { transform:scale(1.18) translateY(-2px); }
+
+/* Botón de actualizar - pequeño, flotante top-right */
+.refresh-btn {
+    position: fixed;
+    top: 12px; right: 12px;
+    padding: 8px 14px;
+    background: rgba(102,126,234,0.15);
+    color: var(--btn-in-start, #667eea);
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+}
+.refresh-btn:hover { background: rgba(102,126,234,0.25); }
+</style>
+</head>
+<body class="page-user">
+    <div class="container">
+        <div class="header" style="padding-top:50px;">
+            <p class="welcome" id="welcomeText">Cargando...</p>
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;">
+                <div id="statusBadge"></div>
+                <button onclick="location.reload()" style="padding:5px 12px;background:rgba(102,126,234,0.15);color:var(--btn-in-start,#667eea);border:1px solid rgba(102,126,234,0.3);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">🔄</button>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Fichaje -->
+        <div class="card" data-tab="f">
+            <h2>⏰ Fichaje</h2>
+            <div data-hc-banner></div>
+            <div data-inf-aviso></div>
+            
+            <div class="btn-grid">
+                <button class="btn btn-in" id="btnClockIn" onclick="clockIn()">
+                    <span class="icon">▶️</span>
+                    <span>Fichar Entrada</span>
+                </button>
+                
+                <button class="btn btn-out" id="btnClockOut" onclick="clockOut()">
+                    <span class="icon">⏹️</span>
+                    <span>Fichar Salida</span>
+                </button>
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div class="info-box" id="infoBox">
+                <div class="info-row">
+                    <span class="info-label">Última acción:</span>
+                    <span class="info-value" id="lastAction">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Hora:</span>
+                    <span class="info-value" id="lastTime">-</span>
+                </div>
+                <!-- El widget de ubicación se agregará aquí dinámicamente si está habilitado -->
+            </div>
+            
+            <!-- Alerta de ubicación si es requerida y no está disponible -->
+            <div id="locationPermissionBox" class="location-permission-box" style="display: none;">
+                <p>
+                    <strong>⚠️ Geolocalización requerida</strong><br>
+                    <span style="font-size: 14px; color: #666;">
+                        Este sistema requiere tu ubicación para registrar fichajes.
+                    </span>
+                </p>
+                <button onclick="requestLocationPermission()">
+                    📍 Habilitar Ubicación
+                </button>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Descansos -->
+        <div class="card" data-tab="d">
+            <h2>☕ Descansos</h2>
+            
+            <div class="btn-grid">
+                <button class="btn btn-break" id="btnBreakStart" onclick="breakStart()">
+                    <span class="icon">⏸️</span>
+                    <span>Iniciar Descanso</span>
+                </button>
+                
+                <button class="btn btn-secondary" id="btnBreakEnd" onclick="breakEnd()">
+                    <span class="icon">▶️</span>
+                    <span>Fin Descanso</span>
+                </button>
+            </div>
+            
+            <p style="margin-top: 10px; color: #666; font-size: 14px;">
+                Sigues fichado mientras estás en descanso.
+            </p>
+        </div>
+
+<!-- Tarjeta de Estadísticas del Usuario -->
+<div class="card" data-tab="e">
+    <h2>📊 Mis Estadísticas</h2>
+    
+    <!-- Filtros de Período y Año -->
+    <div style="margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        
+        <!-- Selector de Período -->
+        <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">📅 Período</label>
+            <select id="misPeriodo" onchange="cargarMisEstadisticas()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                <option value="today">📅 Hoy</option>
+                <option value="week">📊 Semana Actual</option>
+                <option value="month" selected="">📆 Mes Actual</option>
+                <option value="last7">🕐 Últimos 7 días</option>
+                <option value="last30">🕐 Últimos 30 días</option>
+                <option value="last90">🕐 Últimos 90 días</option>
+                <option value="all">🌐 Todo el Año</option>
+            </select>
+        </div>
+ 
+        <!-- Selector de Año -->
+        <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">📅 Año</label>
+            <select id="misAno" onchange="cargarMisEstadisticas()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                <!-- Se llena dinámicamente con JavaScript -->
+            </select>
+        </div>
+    </div>
+ 
+    <!-- Cards de Resumen de Estadísticas -->
+    <div class="my-summary-cards" id="misSummaryCards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div class="summary-card" style="text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
+            <div class="number" id="misTotalFichajes" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">0</div>
+            <div class="label" style="font-size: 12px; opacity: 0.9;">Fichajes</div>
+        </div>
+        <div class="summary-card" style="text-align: center; padding: 20px; background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border-radius: 10px;">
+            <div class="number" id="misTotalHoras" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">0h</div>
+            <div class="label" style="font-size: 12px; opacity: 0.9;">Horas Totales</div>
+        </div>
+        <div class="summary-card" style="text-align: center; padding: 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 10px;">
+            <div class="number" id="misDiasTrabajados" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">0</div>
+            <div class="label" style="font-size: 12px; opacity: 0.9;">Días Trabajados</div>
+        </div>
+        <div class="summary-card" style="text-align: center; padding: 20px; background: linear-gradient(135deg, #f5a623 0%, #f1e562 100%); color: white; border-radius: 10px;">
+            <div class="number" id="misPromedioDiario" style="font-size: 32px; font-weight: bold; margin-bottom: 5px;">0h</div>
+            <div class="label" style="font-size: 12px; opacity: 0.9;">Promedio/día</div>
+        </div>
+    </div>
+ 
+    <!-- Gráfico de Barras -->
+    <div style="margin-bottom: 25px;">
+        <h3 style="margin-bottom: 15px; font-size: 16px; color: #333;">⏰ Horas por Día</h3>
+        <div style="position: relative; height: 250px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+            <canvas id="miChartBarras" style="display: block; box-sizing: border-box; height: 250px;"></canvas>
+        </div>
+    </div>
+ 
+    <p style="font-size: 12px; color: #666; text-align: center;">
+        💡 Actualiza esta página para ver los datos más recientes
+    </p>
+
+    <!-- Informes mensuales para firmar -->
+    <div data-inf-empleado></div>
+
+    <!-- Cambios hechos por la empresa en mis fichajes -->
+    <div data-aud-empleado></div>
+</div>
+ 
+
+
+        <!-- Tarjeta de Auto Clock-Out -->
+        <div class="card" data-tab="f">
+            <h2>⏰ Auto Clock-Out</h2>
+            
+            <div class="auto-clockout-section">
+                <div class="settings-row">
+                    <span style="font-weight: 600;">Habilitar Auto Clock-Out</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoClockoutEnabled">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="settings-row">
+                    <span style="font-weight: 600;">Hora de salida automática:</span>
+                    <input type="time" id="autoClockoutTime" class="time-input" value="18:00">
+                </div>
+                
+                <button class="btn btn-secondary" onclick="saveAutoClockout()" style="width: 100%; margin-top: 15px;">
+                    💾 Guardar Configuración
+                </button>
+                
+                <div id="autoClockoutMessage" class="message"></div>
+                
+                <p style="margin-top: 15px; font-size: 13px; color: #666;">
+                    Si olvidas fichar la salida, el sistema lo hará automáticamente a la hora configurada.
+                </p>
+            </div>
+        </div>
+
+        <!-- Mi horario y calendario -->
+        <div class="card" data-tab="h">
+            <h2>📅 Mi horario</h2>
+            <div id="hcCalUsuario"></div>
+        </div>
+
+        <!-- Ajustes -->
+        <div class="card" data-tab="a">
+            <h2>⚙️ Ajustes</h2>
+
+            <!-- Acordeón: Solicitar Ausencia -->
+            <button onclick="toggleSolForm()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700;margin-bottom:0;text-align:left;">
+                <span>📅 Solicitar Ausencia / Vacaciones</span>
+                <span id="solArrow" style="font-size:18px;transition:transform 0.3s;">▼</span>
+            </button>
+            <div id="solPanel" style="max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;border:2px solid rgba(102,126,234,0.2);border-top:none;border-radius:0 0 12px 12px;padding:0 16px;box-sizing:border-box;">
+                <div style="padding:16px 0;display:grid;gap:12px;">
+                    <div>
+                        <label style="display:block;font-weight:600;font-size:13px;margin-bottom:5px;">Tipo de ausencia</label>
+                        <select id="solTipo" style="width:100%;padding:10px;border:2px solid #eee;border-radius:10px;font-size:14px;">
+                            <option value="vacaciones">🏖️ Vacaciones</option>
+                            <option value="baja_laboral">🏥 Baja Laboral</option>
+                            <option value="otro">📝 Otro</option>
+                        </select>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div>
+                            <label style="display:block;font-weight:600;font-size:13px;margin-bottom:5px;">📅 Desde</label>
+                            <input type="date" id="solFechaInicio" style="width:100%;padding:10px;border:2px solid #eee;border-radius:10px;font-size:14px;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-weight:600;font-size:13px;margin-bottom:5px;">📅 Hasta</label>
+                            <input type="date" id="solFechaFin" style="width:100%;padding:10px;border:2px solid #eee;border-radius:10px;font-size:14px;box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <div id="solDiasInfo" style="display:none;text-align:center;font-size:13px;color:#667eea;font-weight:600;padding:6px;background:rgba(102,126,234,0.08);border-radius:8px;"></div>
+                    <div>
+                        <label style="display:block;font-weight:600;font-size:13px;margin-bottom:5px;">Motivo (opcional)</label>
+                        <textarea id="solMotivo" rows="2" placeholder="Ej: Vacaciones de verano..." style="width:100%;padding:10px;border:2px solid #eee;border-radius:10px;font-size:14px;box-sizing:border-box;resize:none;"></textarea>
+                    </div>
+                    <button onclick="enviarSolicitudAusencia()" style="width:100%;padding:13px;background:linear-gradient(135deg,#56ab2f,#a8e063);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
+                        📤 Enviar Solicitud
+                    </button>
+                    <div id="solResult" style="display:none;padding:11px;border-radius:8px;font-weight:600;font-size:14px;"></div>
+                    <div style="border-top:1px solid rgba(0,0,0,0.07);padding-top:12px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                            <b style="font-size:13px;">Mis solicitudes</b>
+                            <button onclick="cargarMisSolicitudes()" style="background:none;border:none;font-size:12px;color:#667eea;cursor:pointer;font-weight:600;">🔄</button>
+                        </div>
+                        <div id="misSolicitudesContent"><p style="color:#999;font-size:13px;text-align:center;padding:8px 0;">Cargando...</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="height:12px;"></div>
+            <button class="btn btn-secondary" onclick="logout()" style="width:100%;margin-top:8px;">
+                <span class="icon">🚪</span><span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </div>
+
+<script>
+    let checkInterval;
+    
+    // ============================================
+    // VARIABLES GLOBALES PARA GEOLOCALIZACIÓN
+    // ============================================
+    let geoSettings = {
+        enabled: false,
+        required: false,
+        show_map: true
+    };
+
+    let currentLocation = null;
+
+    // ============================================
+    // INICIALIZACIÓN AL CARGAR LA PÁGINA
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('api.php?action=check_auth', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (!data.authenticated) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            document.getElementById('welcomeText').textContent = `Bienvenido, ${data.user.nombre}`;
+            
+            // Cargar configuración de geolocalización
+            await loadGeolocationSettings();
+            
+            // Cargar estado inicial
+            await loadStatus();
+            await loadBreakStatus();
+            await loadAutoClockoutSettings();
+            
+            // Verificar auto clock-out cada minuto
+            checkInterval = setInterval(checkAutoClockout, 60000);
+            
+            // Actualizar ubicación si está habilitada
+            if (geoSettings.enabled) {
+                updateLocation();
+                // Actualizar ubicación cada 30 segundos
+                setInterval(updateLocation, 30000);
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            window.location.href = 'login.html';
+        }
+    });
+
+    // ============================================
+    // FUNCIONES DE GEOLOCALIZACIÓN
+    // ============================================
+
+    async function loadGeolocationSettings() {
+        try {
+            const response = await fetch('api.php?action=get_geolocation_settings');
+            const data = await response.json();
+            
+            if (data.success) {
+                geoSettings = data.settings;
+                
+                // Mostrar/ocultar widget de ubicación
+                if (geoSettings.enabled) {
+                    showLocationWidget();
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando configuración geolocalización:', error);
+        }
+    }
+
+    function showLocationWidget() {
+        const infoBox = document.getElementById('infoBox');
+        if (!infoBox) return;
+        
+        // Crear widget de ubicación
+        const locationWidget = document.createElement('div');
+        locationWidget.id = 'locationWidget';
+        locationWidget.className = 'info-row';
+        locationWidget.innerHTML = `
+            <span class="info-label">📍 Ubicación:</span>
+            <span class="info-value" id="locationStatus">
+                <span style="color: #999;">Obteniendo...</span>
+            </span>
+        `;
+        
+        infoBox.appendChild(locationWidget);
+    }
+
+    function updateLocation() {
+        if (!navigator.geolocation) {
+            updateLocationStatus('❌ No disponible', '#dc3545');
+            return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                currentLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                };
+                
+                console.log('📍 Ubicación obtenida:', currentLocation);
+                
+                // Validar ubicación si es requerida
+                if (geoSettings.required || geoSettings.allowed_locations) {
+                    try {
+                        const response = await fetch('api.php?action=validate_location', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(currentLocation)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success && data.valid) {
+                            const distText = data.distance !== null ? ` (${data.distance}m)` : '';
+                            updateLocationStatus(`✅ Válida${distText}`, '#28a745');
+                            hideLocationPermissionBox();
+                        } else {
+                            updateLocationStatus(`⚠️ Fuera de área (${data.distance}m)`, '#ffc107');
+                            if (geoSettings.required) {
+                                showLocationPermissionBox(false);
+                            }
+                        }
+                    } catch (error) {
+                        updateLocationStatus('✅ Obtenida', '#28a745');
+                        hideLocationPermissionBox();
+                    }
+                } else {
+                    updateLocationStatus('✅ Obtenida', '#28a745');
+                    hideLocationPermissionBox();
+                }
+            },
+            (error) => {
+                console.error('Error geolocalización:', error);
+                currentLocation = null;
+                
+                let errorMsg = '❌ Error';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMsg = '❌ Permiso denegado';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMsg = '❌ No disponible';
+                        break;
+                    case error.TIMEOUT:
+                        errorMsg = '⏱️ Timeout';
+                        break;
+                }
+                
+                updateLocationStatus(errorMsg, '#dc3545');
+                
+                // Si es requerida, mostrar alerta
+                if (geoSettings.required) {
+                    showLocationPermissionBox(true);
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 30000
+            }
+        );
+    }
+
+    function updateLocationStatus(text, color) {
+        const statusEl = document.getElementById('locationStatus');
+        if (statusEl) {
+            statusEl.innerHTML = `<span style="color: ${color};">${text}</span>`;
+        }
+    }
+
+    function showLocationPermissionBox(showButton = true) {
+        const box = document.getElementById('locationPermissionBox');
+        if (box) {
+            box.style.display = 'block';
+            if (!showButton) {
+                const button = box.querySelector('button');
+                if (button) button.style.display = 'none';
+            }
+        }
+    }
+
+    function hideLocationPermissionBox() {
+        const box = document.getElementById('locationPermissionBox');
+        if (box) {
+            box.style.display = 'none';
+        }
+    }
+
+    function requestLocationPermission() {
+        updateLocationStatus('🔄 Solicitando permiso...', '#007bff');
+        updateLocation();
+    }
+
+    // ============================================
+    // FUNCIONES DE FICHAJE (ENTRADA/SALIDA)
+    // ============================================
+    
+async function clockIn() {
+	
+    // 🆕 VERIFICAR AUSENCIA ACTIVA ANTES DE FICHAR
+    const userId = sessionStorage.getItem('user_id');
+    
+    if (userId) { // Solo verificar si hay usuario logueado
+        try {
+            const response = await fetch('api.php?action=verificar_ausencia_usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario_id: userId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.ausencia_activa) {
+                const tipoTexto = {
+                    'vacaciones': '🏖️ Vacaciones',
+                    'baja_laboral': '🏥 Baja Laboral',
+                    'suspension_indefinida': '⏸️ Suspensión',
+                    'otro': '📝 Ausencia'
+                };
+                
+                let mensaje = `❌ No puedes fichar\n\n`;
+                mensaje += `Tienes una ${tipoTexto[data.tipo]} activa`;
+                
+                if (data.fecha_fin) {
+                    mensaje += `\nDesde: ${data.fecha_inicio}`;
+                    mensaje += `\nHasta: ${data.fecha_fin}`;
+                } else {
+                    mensaje += `\nDesde: ${data.fecha_inicio}`;
+                    mensaje += `\nDuración: INDEFINIDA`;
+                }
+                
+                if (data.motivo) {
+                    mensaje += `\n\nMotivo: ${data.motivo}`;
+                }
+                
+                alert(mensaje);
+                return; // ⚠️ IMPORTANTE: Salir sin fichar
+            }
+        } catch (error) {
+            console.error('Error verificando ausencia:', error);
+            // Continuar si falla la verificación (no bloquear por error técnico)
+        }
+    }
+	
+    const btn = document.getElementById('btnClockIn');
+    
+    // ⭐ PREVENIR DOBLE CLICK
+    if (btn.disabled) return;
+    
+    // Verificar geolocalización si es requerida
+    if (geoSettings.enabled && geoSettings.required && !currentLocation) {
+        showMessage('⚠️ Por favor, espera a que se obtenga tu ubicación', 'warning');
+        updateLocation();
+        return;
+    }
+    
+    // ⭐ DESHABILITAR BOTÓN INMEDIATAMENTE
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="flipping-hourglass" style="font-size: 28px;">⏳</span><span style="font-size: 14px;">Fichando...</span>';
+    
+    try {
+        // ============================================
+        // 🆕 PASO 1: VALIDAR AUTO CLOCK-OUT
+        // ============================================
+        const horaActual = new Date().toTimeString().slice(0, 5); // "17:00"
+        
+        const autoClockoutConfig = await obtenerConfigAutoClockout();
+        
+        if (autoClockoutConfig.enabled && autoClockoutConfig.time) {
+            const clockoutTime = autoClockoutConfig.time; // "14:00"
+            
+            // Verificar si entrada es DESPUÉS de auto clock-out configurado
+            if (horaActual > clockoutTime) {
+                
+                // Calcular minutos transcurridos
+                const minutosTranscurridos = calcularMinutosTranscurridos(clockoutTime, horaActual);
+                
+                // ============================================
+                // 🆕 CONFLICTO DETECTADO
+                // ============================================
+                console.warn('⚠️ Auto clock-out conflicto detectado:', {
+                    horaEntrada: horaActual,
+                    horaConfig: clockoutTime,
+                    minutosTranscurridos
+                });
+                
+                // Mostrar modal de advertencia
+                const decision = await mostrarModalAutoClockoutConflicto({
+                    horaActual,
+                    clockoutTime,
+                    minutosTranscurridos
+                });
+                
+                if (decision === 'CANCELAR') {
+                    // Usuario cancela el fichaje
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    showMessage('ℹ️ Fichaje cancelado', 'info');
+                    return;
+                }
+                
+                if (decision === 'RECONFIGURAR') {
+                    // Abrir modal de reconfiguración
+                    const nuevaHora = await mostrarModalReconfigurarHora(horaActual);
+                    
+                    if (nuevaHora) {
+                        await guardarAutoClockout(true, nuevaHora);
+                        showMessage(`✅ Auto clock-out reconfigurado a las ${nuevaHora}`, 'success');
+						actualizarUIAutoClockout(true, nuevaHora);
+                    } else {
+                        // Usuario canceló la reconfiguración
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        return;
+                    }
+                }
+                
+                if (decision === 'DESACTIVAR') {
+                    // Desactivar auto clock-out
+                    await guardarAutoClockout(false, clockoutTime);
+                    showMessage('✅ Auto clock-out desactivado', 'success');
+					await loadAutoClockoutSettings();
+					actualizarUIAutoClockout(false, clockoutTime);
+                }
+                
+                // Si llegó aquí, proceder con el fichaje
+            }
+        }
+        
+        // ============================================
+        // 🆕 PASO 2: PROCEDER CON CLOCK IN NORMAL
+        // ============================================
+        await performAction('clock_in', '✅ Entrada registrada', currentLocation);
+        
+    } catch (error) {
+        console.error('Error en clockIn:', error);
+        // Si hay error, rehabilitar botón
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        showMessage('❌ Error al fichar entrada', 'error');
+        throw error;
+    }
+    // Nota: performAction ya llama a loadStatus() que actualizará el botón
+}
+
+
+/* ============================================
+   NUEVAS FUNCIONES AUXILIARES
+   Añadir DESPUÉS de la función clockIn()
+   ============================================ */
+
+// Obtener configuración actual de auto clock-out
+async function obtenerConfigAutoClockout() {
+    try {
+        const response = await fetch('api.php?action=get_auto_clockout', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            return {
+                enabled: data.enabled,
+                time: data.time
+            };
+        }
+        
+        return { enabled: false, time: '18:00' };
+        
+    } catch (error) {
+        console.error('Error obteniendo config auto clockout:', error);
+        return { enabled: false, time: '18:00' };
+    }
+}
+
+// Calcular minutos transcurridos entre dos horas
+function calcularMinutosTranscurridos(horaAnterior, horaActual) {
+    const [h1, m1] = horaAnterior.split(':').map(Number);
+    const [h2, m2] = horaActual.split(':').map(Number);
+    
+    const minutos1 = h1 * 60 + m1;
+    const minutos2 = h2 * 60 + m2;
+    
+    return minutos2 - minutos1;
+}
+
+// Modal de conflicto de auto clock-out
+function mostrarModalAutoClockoutConflicto({ horaActual, clockoutTime, minutosTranscurridos }) {
+    return new Promise((resolve) => {
+        // Crear overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'modal-autoclock-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        `;
+        
+        // Crear modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s;
+        `;
+        
+        const horasTranscurridas = Math.floor(minutosTranscurridos / 60);
+        const minRestantes = minutosTranscurridos % 60;
+        let tiempoTexto = '';
+        
+        if (horasTranscurridas > 0) {
+            tiempoTexto = `${horasTranscurridas}h ${minRestantes}min`;
+        } else {
+            tiempoTexto = `${minRestantes} minutos`;
+        }
+        
+        modal.innerHTML = `
+            
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 64px; margin-bottom: 15px;">⚠️</div>
+                <h2 style="color: #f59e0b; margin-bottom: 10px; font-size: 24px;">
+                    Conflicto de Auto Clock-Out
+                </h2>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #f59e0b;">
+                <p style="margin: 0 0 15px 0; color: #92400e; line-height: 1.6;">
+                    <strong>Tu auto clock-out está configurado a las ${clockoutTime}</strong>
+                </p>
+                <p style="margin: 0 0 15px 0; color: #92400e; line-height: 1.6;">
+                    Estás fichando entrada a las <strong>${horaActual}</strong><br>
+                    (${tiempoTexto} después de tu hora configurada)
+                </p>
+                <p style="margin: 0; color: #92400e; line-height: 1.6;">
+                    Si continúas con esta configuración, <strong>el sistema te desfichará automáticamente</strong>.
+                </p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <button class="modal-autoclock-btn btn-reconfig" id="btn-modal-reconfig">
+                    <span>🔧</span>
+                    <span>Reconfigurar Auto Clock-Out</span>
+                </button>
+                
+                <button class="modal-autoclock-btn btn-disable" id="btn-modal-disable">
+                    <span>⏸️</span>
+                    <span>Desactivar Temporalmente</span>
+                </button>
+                
+                <button class="modal-autoclock-btn btn-cancel" id="btn-modal-cancel">
+                    <span>❌</span>
+                    <span>Cancelar Fichaje</span>
+                </button>
+            </div>
+            
+            <p style="text-align: center; color: #6b7280; font-size: 13px; margin: 15px 0 0 0;">
+                💡 Consejo: Si trabajas en turnos variables, usa la opción de reconfigurar
+            </p>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Event listeners
+        document.getElementById('btn-modal-reconfig').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve('RECONFIGURAR');
+        };
+        
+        document.getElementById('btn-modal-disable').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve('DESACTIVAR');
+        };
+        
+        document.getElementById('btn-modal-cancel').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve('CANCELAR');
+        };
+    });
+}
+
+// Modal para reconfigurar hora
+function mostrarModalReconfigurarHora(horaMinima) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        `;
+        
+        // Calcular sugerencias de hora
+        const [h, m] = horaMinima.split(':').map(Number);
+        const sugerencia1 = `${String(h + 6).padStart(2, '0')}:00`; // +6 horas
+        const sugerencia2 = `${String(h + 8).padStart(2, '0')}:00`; // +8 horas
+        const sugerencia3 = '23:59'; // Fin del día
+        
+        modal.innerHTML = `
+            <h3 style="margin-bottom: 20px; color: #1e40af;">
+                🔧 Nueva Hora de Auto Clock-Out
+            </h3>
+            
+            <p style="margin-bottom: 20px; color: #6b7280; line-height: 1.6;">
+                Selecciona una hora <strong>posterior</strong> a tu hora de entrada actual (${horaMinima})
+            </p>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #374151;">
+                    Hora de Salida Automática:
+                </label>
+                <input type="time" 
+                       id="nueva-hora-autoclock" 
+                       min="${horaMinima}"
+                       value="${sugerencia1}"
+                       style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 18px;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">Sugerencias:</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-sugerencia" data-hora="${sugerencia1}" style="padding: 8px 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                        ${sugerencia1}
+                    </button>
+                    <button class="btn-sugerencia" data-hora="${sugerencia2}" style="padding: 8px 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                        ${sugerencia2}
+                    </button>
+                    <button class="btn-sugerencia" data-hora="${sugerencia3}" style="padding: 8px 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                        ${sugerencia3}
+                    </button>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-confirmar-hora" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    ✅ Confirmar
+                </button>
+                <button id="btn-cancelar-hora" style="flex: 1; padding: 12px; background: #e5e7eb; color: #374151; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    ❌ Cancelar
+                </button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Sugerencias
+        modal.querySelectorAll('.btn-sugerencia').forEach(btn => {
+            btn.onclick = () => {
+                document.getElementById('nueva-hora-autoclock').value = btn.dataset.hora;
+            };
+        });
+        
+        // Confirmar
+        document.getElementById('btn-confirmar-hora').onclick = () => {
+            const nuevaHora = document.getElementById('nueva-hora-autoclock').value;
+            
+            if (!nuevaHora) {
+                alert('Por favor selecciona una hora');
+                return;
+            }
+            
+            if (nuevaHora <= horaMinima) {
+                alert(`La hora debe ser posterior a ${horaMinima}`);
+                return;
+            }
+            
+            document.body.removeChild(overlay);
+            resolve(nuevaHora);
+        };
+        
+        // Cancelar
+        document.getElementById('btn-cancelar-hora').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+        };
+    });
+}
+
+// Guardar configuración de auto clock-out
+async function guardarAutoClockout(enabled, time) {
+    const requestData = { enabled, time };
+    
+    // Incluir ubicación actual si está disponible
+    if (currentLocation) {
+        requestData.latitude = currentLocation.latitude;
+        requestData.longitude = currentLocation.longitude;
+    }
+    
+    const response = await fetch('api.php?action=set_auto_clockout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData)
+    });
+    
+    return await response.json();
+}
+
+function actualizarUIAutoClockout(enabled, time) {
+    const checkbox = document.getElementById('autoClockoutEnabled');
+    const timeInput = document.getElementById('autoClockoutTime');
+    
+    if (checkbox) {
+        checkbox.checked = enabled;
+        console.log('✅ Checkbox actualizado:', enabled);
+    } else {
+        console.error('❌ Checkbox no encontrado con ID: autoClockoutEnabled');
+    }
+    
+    if (timeInput) {
+        timeInput.value = time;
+        console.log('✅ Hora actualizada:', time);
+    } else {
+        console.error('❌ Input hora no encontrado con ID: autoClockoutTime');
+    }
+}
+	
+async function clockOut() {
+    const btn = document.getElementById('btnClockOut');
+    
+    // ⭐ PREVENIR DOBLE CLICK
+    if (btn.disabled) return;
+    
+    // Verificar geolocalización si es requerida
+    if (geoSettings.enabled && geoSettings.required && !currentLocation) {
+        showMessage('⚠️ Por favor, espera a que se obtenga tu ubicación', 'warning');
+        updateLocation();
+        return;
+    }
+    
+    // ⭐ DESHABILITAR BOTÓN INMEDIATAMENTE
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+btn.innerHTML = '<span class="flipping-hourglass" style="font-size: 28px;">⏳</span><span style="font-size: 14px;">Fichando salida...</span>';    
+    try {
+        await performAction('clock_out', '✅ Salida registrada', currentLocation);
+    } catch (error) {
+        // Si hay error, rehabilitar botón
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        throw error;
+    }
+    // Nota: performAction ya llama a loadStatus() que actualizará el botón
+}
+
+    async function loadStatus() {
+        try {
+            const response = await fetch('api.php?action=get_status', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                updateUI(data.status, data.lastEntry);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+function updateUI(status, lastEntry) {
+    const btnIn = document.getElementById('btnClockIn');
+    const btnOut = document.getElementById('btnClockOut');
+    const statusBadge = document.getElementById('statusBadge');
+    
+    // ⭐ HTML ORIGINAL DE TUS BOTONES
+    const originalInHTML = '<span class="icon">▶️</span><span>Fichar Entrada</span>';
+    const originalOutHTML = '<span class="icon">⏹️</span><span>Fichar Salida</span>';
+    
+    // Actualizar estado de fichaje
+    if (status === 'in') {
+        statusBadge.innerHTML = '<span class="status-badge status-in">✅ Fichado</span>';
+        btnIn.disabled = true;
+        btnIn.innerHTML = originalInHTML; // ⭐ RESTAURAR TEXTO
+        btnIn.style.opacity = '0.5';
+        btnOut.disabled = false;
+        btnOut.innerHTML = originalOutHTML; // ⭐ RESTAURAR TEXTO
+        btnOut.style.opacity = '1';
+    } else {
+        statusBadge.innerHTML = '<span class="status-badge status-out">⭕ No fichado</span>';
+        btnIn.disabled = false;
+        btnIn.innerHTML = originalInHTML; // ⭐ RESTAURAR TEXTO
+        btnIn.style.opacity = '1';
+        btnOut.disabled = true;
+        btnOut.innerHTML = originalOutHTML; // ⭐ RESTAURAR TEXTO
+        btnOut.style.opacity = '0.5';
+    }
+    
+    // Actualizar info de última acción
+    if (lastEntry) {
+        const time = new Date(lastEntry.time);
+        const type = lastEntry.type === 'In' ? 'Entrada' : 'Salida';
+        document.getElementById('lastAction').textContent = type;
+        document.getElementById('lastTime').textContent = time.toLocaleTimeString('es-ES');
+    }
+    
+    // IMPORTANTE: Después de actualizar fichaje, actualizar breaks
+    loadBreakStatus();
+}
+
+    // ============================================
+    // FUNCIONES DE DESCANSOS
+    // ============================================
+    
+    async function breakStart() {
+        const message = document.getElementById('message');
+        message.style.display = 'none';
+        
+        try {
+            const response = await fetch('api.php?action=break_start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ note: 'Descanso' })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showMessage('☕ Descanso iniciado - Sigues fichado en Jibble', 'success');
+                await loadBreakStatus();
+            } else {
+                showMessage(data.error || 'Error al iniciar descanso', 'error');
+            }
+        } catch (error) {
+            showMessage('Error de conexión', 'error');
+        }
+    }
+
+    async function breakEnd() {
+        const message = document.getElementById('message');
+        message.style.display = 'none';
+        
+        try {
+            const response = await fetch('api.php?action=break_end', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showMessage(`▶️ Descanso finalizado (${data.duracion_minutos} min)`, 'success');
+                await loadBreakStatus();
+            } else {
+                showMessage(data.error || 'Error al finalizar descanso', 'error');
+            }
+        } catch (error) {
+            showMessage('Error de conexión', 'error');
+        }
+    }
+
+    async function loadBreakStatus() {
+        try {
+            const response = await fetch('api.php?action=get_break_status', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                updateBreakUI(data);
+            }
+        } catch (error) {
+            console.error('Error loading break status:', error);
+        }
+    }
+
+    function updateBreakUI(breakData) {
+        const btnBreakStart = document.getElementById('btnBreakStart');
+        const btnBreakEnd = document.getElementById('btnBreakEnd');
+        const btnClockOut = document.getElementById('btnClockOut');
+        const infoBox = document.getElementById('infoBox');
+        
+        // Verificar si está fichado (el botón clock out debe estar habilitado)
+        const estaFichado = !btnClockOut.disabled;
+        
+        // LÓGICA DE BOTONES DE BREAKS
+        if (breakData.en_descanso) {
+            // ESTÁ EN DESCANSO
+            btnBreakStart.disabled = true;   // No puede iniciar otro descanso
+            btnBreakEnd.disabled = false;    // Puede terminar el descanso
+            
+            // Calcular minutos transcurridos
+            const breakInicio = new Date(breakData.break_actual.inicio);
+            const minutos = Math.floor((Date.now() - breakInicio.getTime()) / 60000);
+            
+            // Mostrar info del descanso actual
+            if (infoBox) {
+                const breakInfo = document.getElementById('breakInfo') || createBreakInfoRow();
+                breakInfo.querySelector('.info-value').textContent = `⏸️ En descanso (${minutos} min)`;
+                breakInfo.querySelector('.info-value').style.color = '#f5576c';
+                breakInfo.querySelector('.info-value').style.fontWeight = 'bold';
+            }
+        } else {
+            // NO ESTÁ EN DESCANSO
+            if (estaFichado) {
+                // Está fichado → Puede iniciar descanso
+                btnBreakStart.disabled = false;
+                btnBreakEnd.disabled = true;
+            } else {
+                // No está fichado → No puede usar descansos
+                btnBreakStart.disabled = true;
+                btnBreakEnd.disabled = true;
+            }
+            
+            // Mostrar total de descansos del día
+            if (infoBox && breakData.total_minutos_descanso > 0) {
+                const breakInfo = document.getElementById('breakInfo') || createBreakInfoRow();
+                breakInfo.querySelector('.info-value').textContent = 
+                    `${breakData.num_breaks} descanso${breakData.num_breaks > 1 ? 's' : ''} (${breakData.total_minutos_descanso} min total)`;
+                breakInfo.querySelector('.info-value').style.color = '#333';
+                breakInfo.querySelector('.info-value').style.fontWeight = 'normal';
+            } else if (infoBox) {
+                // Limpiar si no hay descansos
+                const breakInfo = document.getElementById('breakInfo');
+                if (breakInfo) {
+                    breakInfo.remove();
+                }
+            }
+        }
+    }
+
+    function createBreakInfoRow() {
+        const infoBox = document.getElementById('infoBox');
+        const row = document.createElement('div');
+        row.className = 'info-row';
+        row.id = 'breakInfo';
+        row.innerHTML = `
+            <span class="info-label">Descansos hoy:</span>
+            <span class="info-value">-</span>
+        `;
+        infoBox.appendChild(row);
+        return row;
+    }
+
+    // ============================================
+    // FUNCIONES DE AUTO CLOCK-OUT
+    // ============================================
+    
+    async function loadAutoClockoutSettings() {
+        try {
+            const response = await fetch('api.php?action=get_auto_clockout', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('autoClockoutEnabled').checked = data.enabled;
+                document.getElementById('autoClockoutTime').value = data.time;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function saveAutoClockout() {
+        const enabled = document.getElementById('autoClockoutEnabled').checked;
+        const time = document.getElementById('autoClockoutTime').value;
+        const message = document.getElementById('autoClockoutMessage');
+        
+        try {
+            // Preparar datos incluyendo ubicación si está disponible
+            const requestData = { enabled, time };
+            
+            // Incluir ubicación actual para que el CRON la use
+            if (currentLocation) {
+                requestData.latitude = currentLocation.latitude;
+                requestData.longitude = currentLocation.longitude;
+            }
+            
+            const response = await fetch('api.php?action=set_auto_clockout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                let successText = '✅ Configuración guardada';
+                if (data.location_saved) {
+                    successText += ' (con ubicación)';
+                } else if (enabled) {
+                    successText += ' (sin ubicación - se usará la del fichaje de entrada)';
+                }
+                message.textContent = successText;
+                message.className = 'message success';
+                message.style.display = 'block';
+                
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 4000);
+            } else {
+                message.textContent = '❌ Error al guardar';
+                message.className = 'message error';
+                message.style.display = 'block';
+            }
+        } catch (error) {
+            message.textContent = '❌ Error de conexión';
+            message.className = 'message error';
+            message.style.display = 'block';
+        }
+    }
+
+    async function checkAutoClockout() {
+        try {
+            const response = await fetch('api.php?action=check_auto_clockout', {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.success && data.action === 'clocked_out') {
+                showMessage(`✅ Auto Clock-Out ejecutado a las ${data.time}`, 'success');
+                await loadStatus();
+            }
+        } catch (error) {
+            console.error('Error checking auto clockout:', error);
+        }
+    }
+
+    // ============================================
+    // FUNCIONES AUXILIARES
+    // ============================================
+    
+async function performAction(action, successMsg, location = null) {
+    const message = document.getElementById('message');
+    message.style.display = 'none';
+    
+    try {
+        const body = {};
+        
+        // Agregar ubicación si está disponible
+        if (location && geoSettings.enabled) {
+            body.latitude = location.latitude;
+            body.longitude = location.longitude;
+            body.accuracy = location.accuracy;
+        }
+        
+        const response = await fetch(`api.php?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            let msg = successMsg;
+            
+            // Agregar info de ubicación si se validó
+            if (data.location_validated !== undefined) {
+                if (data.location_validated) {
+                    const distText = data.distance ? ` (${data.distance}m)` : '';
+                    msg += ` 📍 Ubicación validada${distText}`;
+                } else if (data.location_validated === 0) {
+                    msg += ` ⚠️ Ubicación fuera de área`;
+                }
+            }
+            
+            // Mostrar si Jibble guardó la ubicación
+            if (data.jibble_saved_location !== undefined) {
+                console.log('🗺️ Jibble guardó ubicación:', data.jibble_saved_location);
+            }
+            
+            showMessage(msg, 'success');
+            await loadStatus();
+            await loadBreakStatus();
+        } else {
+            // ⭐ NUEVO: Manejar error de duplicado
+            if (data.error && data.error.indexOf('5 segundos') !== -1) {
+                showMessage(data.error, 'warning');
+                // Recargar estado después de 2 segundos
+                setTimeout(async () => {
+                    await loadStatus();
+                    await loadBreakStatus();
+                }, 2000);
+            }
+            // Error específico de geolocalización
+            else if (data.geolocation_required) {
+                showMessage('❌ Debes habilitar la geolocalización para fichar', 'error');
+                updateLocation(); // Intentar obtener ubicación
+                showLocationPermissionBox(true);
+            } else {
+                showMessage(data.error || 'Error en la operación', 'error');
+            }
+        }
+    } catch (error) {
+        showMessage('Error de conexión', 'error');
+        throw error; // ⭐ NUEVO: Re-lanzar error para que clockIn/Out lo capture
+    }
+}
+
+    function showMessage(text, type) {
+        const message = document.getElementById('message');
+        message.textContent = text;
+        message.className = `message ${type}`;
+        message.style.display = 'block';
+        
+        setTimeout(() => {
+            message.style.display = 'none';
+        }, 5000);
+    }
+
+    function logout() {
+        clearInterval(checkInterval);
+        fetch('api.php?action=logout', { method: 'POST' })
+            .then(() => {
+                window.location.href = 'login.html';
+            });
+    }
+	
+// ============================================
+// VARIABLES GLOBALES PARA ESTADÍSTICAS
+// ============================================
+let miChartInstance = null;
+let anosDisponibles = []; // Años con datos
+ 
+// ============================================
+// OBTENER AÑOS DISPONIBLES (CON DATOS)
+// ============================================
+ 
+function obtenerAnosDisponibles() {
+    
+    // Hacer fetch a un nuevo endpoint que devuelva los años disponibles
+    fetch('api.php?action=get_anos_disponibles')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                anosDisponibles = data.anos; // Array de años con datos
+                console.log('✅ Años disponibles:', anosDisponibles);
+                inicializarSelectorAno();
+                cargarMisEstadisticas();
+            } else {
+                console.error('Error obteniendo años:', data.error);
+                // Fallback: usar años por defecto
+                inicializarSelectorAno();
+                cargarMisEstadisticas();
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            // Fallback: usar años por defecto
+            inicializarSelectorAno();
+            cargarMisEstadisticas();
+        });
+}
+ 
+// ============================================
+// INICIALIZAR SELECTOR DE AÑO
+// ============================================
+ 
+function inicializarSelectorAno() {
+    const selectAno = document.getElementById('misAno');
+    if (!selectAno) {
+        console.warn('Elemento misAno no encontrado');
+        return;
+    }
+    
+    // Limpiar opciones existentes
+    selectAno.innerHTML = '';
+    
+    const ahora = new Date();
+    const anoActual = ahora.getFullYear();
+    
+    // Si hay años disponibles en la BD, usarlos
+    let anosAMostrar = anosDisponibles.length > 0 ? anosDisponibles : [anoActual];
+    
+    // Ordenar años de mayor a menor
+    anosAMostrar.sort((a, b) => b - a);
+    
+    console.log('📅 Mostrando años:', anosAMostrar);
+    
+    // Crear opción para cada año con datos
+    anosAMostrar.forEach(ano => {
+        const option = document.createElement('option');
+        option.value = ano;
+        option.textContent = ano;
+        if (ano === anoActual) {
+            option.selected = true; // Seleccionar año actual si está disponible
+        }
+        selectAno.appendChild(option);
+    });
+    
+    console.log('✅ Selector de año inicializado con años disponibles');
+}
+ 
+// ============================================
+// CARGAR MIS ESTADÍSTICAS
+// ============================================
+ 
+function cargarMisEstadisticas() {
+    const periodoSelect = document.getElementById('misPeriodo');
+    const anoSelect = document.getElementById('misAno');
+    
+    if (!periodoSelect || !anoSelect) {
+        console.error('Elementos no encontrados');
+        return;
+    }
+    
+    const periodo = periodoSelect.value || 'month';
+    const ano = anoSelect.value || new Date().getFullYear();
+    
+    console.log('📊 Cargando estadísticas:', { periodo, ano });
+    
+    // Construir URL con período y año
+    let url = `api.php?action=get_my_stats&periodo=${periodo}&ano=${ano}`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            console.log('✅ Datos recibidos:', data);
+            if (data.success) {
+                mostrarMisEstadisticas(data, periodo);
+            } else {
+                console.error('Error en API:', data.error);
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error cargando estadísticas:', err);
+            alert('Error al cargar: ' + err.message);
+        });
+}
+ 
+// ============================================
+// MOSTRAR MIS ESTADÍSTICAS
+// ============================================
+ 
+function mostrarMisEstadisticas(data, periodo) {
+    const resumen = data.resumen;
+    
+    console.log('📈 Mostrando datos:', resumen);
+    
+    // Actualizar cards de resumen
+    const fichajes = document.getElementById('misTotalFichajes');
+    const horas = document.getElementById('misTotalHoras');
+    const dias = document.getElementById('misDiasTrabajados');
+    const promedio = document.getElementById('misPromedioDiario');
+    
+    if (fichajes) fichajes.textContent = resumen.totalFichajes;
+    if (horas) horas.textContent = resumen.totalHorasFormato;
+    if (dias) dias.textContent = resumen.diasTrabajados;
+    if (promedio) promedio.textContent = resumen.promedioDiario + 'h';
+    
+    // Actualizar gráfico
+    dibujarGraficoMisEstadisticas(data.detallesPorDia, periodo);
+}
+ 
+// ============================================
+// DIBUJAR GRÁFICO
+// ============================================
+ 
+function dibujarGraficoMisEstadisticas(detalles, periodo) {
+    console.log('🎨 Dibujando gráfico:', { periodo, detalles: detalles.length });
+    
+    const ctx = document.getElementById('miChartBarras');
+    
+    if (!ctx) {
+        console.error('Canvas miChartBarras no encontrado');
+        return;
+    }
+    
+    const canvasCtx = ctx.getContext('2d');
+    if (!canvasCtx) {
+        console.error('No se pudo obtener contexto del canvas');
+        return;
+    }
+    
+    // FILTRAR DETALLES: Solo mostrar días con datos
+    let datosConDatos = detalles.filter(d => d.horas > 0 || d.fichajes > 0);
+    
+    // Si no hay datos con actividad, mostrar todos
+    if (datosConDatos.length === 0) {
+        datosConDatos = detalles;
+    }
+    
+    // LIMITAR número de barras para no saturar el gráfico
+    let datosAMostrar = datosConDatos;
+    
+    switch(periodo) {
+        case 'today':
+            datosAMostrar = datosConDatos.slice(-1);
+            break;
+        case 'week':
+            datosAMostrar = datosConDatos.slice(-7);
+            break;
+        case 'month':
+            datosAMostrar = datosConDatos.slice(-30);
+            break;
+        case 'last7':
+            datosAMostrar = datosConDatos.slice(-7);
+            break;
+        case 'last30':
+            datosAMostrar = datosConDatos.slice(-30);
+            break;
+        case 'last90':
+            datosAMostrar = datosConDatos.slice(-90);
+            break;
+        case 'all':
+            datosAMostrar = datosConDatos.slice(-120);
+            console.log('📊 Período "all" - Mostrando últimos 120 días');
+            break;
+        default:
+            datosAMostrar = datosConDatos.slice(-30);
+    }
+    
+    console.log('📊 Datos a mostrar:', datosAMostrar.length, 'días con datos');
+    
+    // Si aún tiene muchas barras, mostrar solo cada 7 días en el eje X
+    const mostrarCadaLabel = datosAMostrar.length > 60 ? 7 : 1;
+    
+    // CREAR LABELS Y DATOS
+    const labels = datosAMostrar.map((d, index) => {
+        const fecha = new Date(d.fecha);
+        const dia = fecha.getDate();
+        const mes = fecha.getMonth() + 1;
+        
+        // Mostrar label cada X días para no saturar
+        if (index % mostrarCadaLabel === 0) {
+            return `${dia}/${mes}`;
+        }
+        return '';
+    });
+    
+    const datos = datosAMostrar.map(d => d.horas);
+    
+    console.log('📊 Labels:', labels.length, 'Datos:', datos.length);
+    
+    // Destruir gráfico anterior
+    if (miChartInstance) {
+        miChartInstance.destroy();
+    }
+    
+    // Verificar si Chart.js está disponible
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está cargado, cargándolo...');
+        cargarChartJS().then(() => dibujarGraficoMisEstadisticas(detalles, periodo));
+        return;
+    }
+    
+    // CREAR NUEVO GRÁFICO
+    console.log('✅ Creando gráfico con Chart.js');
+    
+    miChartInstance = new Chart(canvasCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Horas Trabajadas',
+                data: datos,
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                barPercentage: 0.8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const fecha = datosAMostrar[context.dataIndex].fecha;
+                            const horas = context.parsed.y;
+                            return `${fecha}: ${horas}h`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + 'h';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log('✅ Gráfico creado exitosamente');
+}
+ 
+// ============================================
+// CARGAR CHART.JS
+// ============================================
+ 
+function cargarChartJS() {
+    return new Promise((resolve, reject) => {
+        if (typeof Chart !== 'undefined') {
+            resolve();
+            return;
+        }
+        
+        console.log('📥 Cargando Chart.js desde CDN...');
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.onload = () => {
+            console.log('✅ Chart.js cargado');
+            resolve();
+        };
+        script.onerror = () => {
+            console.error('❌ Error cargando Chart.js');
+            reject(new Error('No se pudo cargar Chart.js'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+ 
+
+</script>
+
+<!-- HTML del reloj esquina (agregar en el body) -->
+<div class="reloj-esquina">
+    <div class="hora" id="horaEsquina"></div>
+    <div class="fecha" id="fechaEsquina"></div>
+</div>
+
+<!-- JavaScript para reloj esquina -->
+<script>
+function actualizarRelojEsquina() {
+    const ahora = new Date();
+    
+    const horas = String(ahora.getHours()).padStart(2, '0');
+    const minutos = String(ahora.getMinutes()).padStart(2, '0');
+    const segundos = String(ahora.getSeconds()).padStart(2, '0');
+    
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const año = ahora.getFullYear();
+    
+    const horaElement = document.getElementById('horaEsquina');
+    const fechaElement = document.getElementById('fechaEsquina');
+    
+    if (horaElement) {
+        horaElement.textContent = `${horas}:${minutos}:${segundos}`;
+    }
+    
+    if (fechaElement) {
+        fechaElement.textContent = `${dia}/${mes}/${año}`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarRelojEsquina();
+    setInterval(actualizarRelojEsquina, 1000);
+    obtenerAnosDisponibles();
+});
+</script>
+
+<nav class="user-nav">
+    <button class="user-nav-btn on" id="tab-f" onclick="tabTo('f')">
+        <span class="ni">⏰</span><span class="nl">Fichaje</span>
+    </button>
+    <button class="user-nav-btn" id="tab-d" onclick="tabTo('d')">
+        <span class="ni">☕</span><span class="nl">Descanso</span>
+    </button>
+    <button class="user-nav-btn" id="tab-e" onclick="tabTo('e')">
+        <span class="ni">📊</span><span class="nl">Stats</span>
+    </button>
+    <button class="user-nav-btn" id="tab-h" onclick="tabTo('h')">
+        <span class="ni">📅</span><span class="nl">Horario</span>
+    </button>
+    <button class="user-nav-btn" id="tab-a" onclick="tabTo('a')">
+        <span class="ni">⚙️</span><span class="nl">Ajustes</span>
+    </button>
+</nav>
+<script>
+function tabTo(tab) {
+    document.querySelectorAll('.card[data-tab]').forEach(function(c) { c.classList.remove('tab-on'); });
+    document.querySelectorAll('.user-nav-btn').forEach(function(b) { b.classList.remove('on'); });
+    document.querySelectorAll('[data-tab="' + tab + '"]').forEach(function(c) { c.classList.add('tab-on'); });
+    var btn = document.getElementById('tab-' + tab);
+    if (btn) btn.classList.add('on');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.addEventListener('DOMContentLoaded', function() { tabTo('f'); });
+</script>
+
+
+<script>
+// ── Solicitudes de ausencia (empleado) ──────────────────────
+
+document.addEventListener('DOMContentLoaded', function() {
+    var hoy = new Date().toISOString().split('T')[0];
+    var ini = document.getElementById('solFechaInicio');
+    var fin = document.getElementById('solFechaFin');
+    if (ini) ini.min = hoy;
+    if (fin) fin.min = hoy;
+
+    if (ini) ini.addEventListener('change', actualizarDias);
+    if (fin) fin.addEventListener('change', actualizarDias);
+
+    var origTabTo = window.tabTo;
+    window.tabTo = function(tab) {
+        origTabTo(tab);
+        if (tab === 'a') cargarMisSolicitudes();
+    };
+});
+
+function actualizarDias() {
+    var ini = document.getElementById('solFechaInicio').value;
+    var fin = document.getElementById('solFechaFin').value;
+    var info = document.getElementById('solDiasInfo');
+    if (!info) return;
+    if (ini && fin && fin >= ini) {
+        var dias = Math.round((new Date(fin) - new Date(ini)) / 86400000) + 1;
+        info.textContent = dias + ' día' + (dias !== 1 ? 's' : '') + ' seleccionado' + (dias !== 1 ? 's' : '');
+        info.style.display = 'block';
+    } else {
+        info.style.display = 'none';
+    }
+}
+
+function toggleSolForm() {
+    var panel = document.getElementById('solPanel');
+    var arrow = document.getElementById('solArrow');
+    if (!panel) return;
+    var abierto = panel.style.maxHeight && panel.style.maxHeight !== '0px';
+    if (abierto) {
+        panel.style.maxHeight = '0px';
+        panel.style.opacity = '0';
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    } else {
+        panel.style.maxHeight = panel.scrollHeight + 200 + 'px';
+        panel.style.opacity = '1';
+        if (arrow) arrow.style.transform = 'rotate(180deg)';
+        cargarMisSolicitudes();
+    }
+}
+
+async function enviarSolicitudAusencia() {
+    var tipo   = document.getElementById('solTipo').value;
+    var ini    = document.getElementById('solFechaInicio').value;
+    var fin    = document.getElementById('solFechaFin').value;
+    var motivo = document.getElementById('solMotivo').value.trim();
+    var res    = document.getElementById('solResult');
+
+    if (!ini || !fin) { mostrarResultSol(res, false, '⚠️ Selecciona las fechas de inicio y fin'); return; }
+    if (fin < ini)    { mostrarResultSol(res, false, '⚠️ La fecha fin debe ser posterior a la de inicio'); return; }
+
+    mostrarResultSol(res, null, '⏳ Enviando solicitud...');
+    try {
+        var r = await fetch('api.php?action=solicitar_ausencia', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({tipo: tipo, fecha_inicio: ini, fecha_fin: fin, motivo: motivo})
+        });
+        var d = await r.json();
+        mostrarResultSol(res, d.success, d.success ? ('✅ ' + d.message) : ('❌ ' + d.error));
+        if (d.success) {
+            document.getElementById('solFechaInicio').value = '';
+            document.getElementById('solFechaFin').value = '';
+            document.getElementById('solMotivo').value = '';
+            document.getElementById('solDiasInfo').style.display = 'none';
+            setTimeout(cargarMisSolicitudes, 400);
+        }
+    } catch(e) { mostrarResultSol(res, false, '❌ Error de conexión'); }
+}
+
+function mostrarResultSol(el, ok, msg) {
+    if (!el) return;
+    el.style.display = 'block';
+    el.style.background = ok === null ? '#e8f4fd' : (ok ? '#eaffea' : '#ffeaea');
+    el.style.color      = ok === null ? '#1a6a9a' : (ok ? '#2a7a2a' : '#c00');
+    el.style.border     = ok === null ? '1px solid #b8d4e8' : (ok ? '1px solid #b8e8b8' : '1px solid #f0b8b8');
+    el.textContent = msg;
+}
+
+async function cargarMisSolicitudes() {
+    var el = document.getElementById('misSolicitudesContent');
+    if (!el) return;
+    try {
+        var r = await fetch('api.php?action=get_mis_solicitudes', {method:'POST'});
+        var d = await r.json();
+        if (!d.success || !d.solicitudes.length) {
+            el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:10px 0;">No tienes solicitudes todavía</p>';
+            return;
+        }
+        var colores = {pendiente:'#f59e0b', aprobada:'#10b981', rechazada:'#ef4444'};
+        var badges  = {pendiente:'⏳ Pendiente', aprobada:'✅ Aprobada', rechazada:'❌ Rechazada'};
+        el.innerHTML = d.solicitudes.map(function(s) {
+            var dias = s.fecha_fin ? Math.round((new Date(s.fecha_fin) - new Date(s.fecha_inicio)) / 86400000) + 1 : '?';
+            return '<div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;border:2px solid ' + colores[s.estado] + '33;background:' + colores[s.estado] + '08;">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                + '<span style="font-weight:700;font-size:13px;">' + s.tipo.replace(/_/g,' ') + '</span>'
+                + '<span style="font-size:11px;font-weight:700;color:' + colores[s.estado] + ';">' + badges[s.estado] + '</span>'
+                + '</div>'
+                + '<div style="font-size:12px;color:#666;margin-top:3px;">' + s.fecha_inicio + ' → ' + (s.fecha_fin || '—') + ' (' + dias + ' días)</div>'
+                + (s.motivo ? '<div style="font-size:12px;color:#888;margin-top:2px;">' + s.motivo + '</div>' : '')
+                + (s.respuesta_admin ? '<div style="font-size:11px;color:#555;margin-top:3px;font-style:italic;">Admin: ' + s.respuesta_admin + '</div>' : '')
+                + '</div>';
+        }).join('');
+        // Ajustar altura del panel
+        var panel = document.getElementById('solPanel');
+        if (panel && panel.style.maxHeight !== '0px') {
+            panel.style.maxHeight = panel.scrollHeight + 200 + 'px';
+        }
+    } catch(e) {
+        el.innerHTML = '<p style="color:#c00;font-size:13px;">Error al cargar solicitudes</p>';
+    }
+}
+
+</script>
+<script src="assets/js/horarios-calendario.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.HC && document.getElementById('hcCalUsuario')) HC.initUsuario('#hcCalUsuario');
+});
+</script>
+<script src="assets/js/auditoria.js"></script>
+<script src="assets/js/informes.js"></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+<style>
+html{visibility:hidden;opacity:0;}
+html.theme-loaded{visibility:visible;animation:pageShow 1s ease-out forwards;background-color: #2d2d44;}
+@keyframes pageShow{from{opacity:0;}to{opacity:1;}}
+
+body.page-home::before,
+body.page-user::before,
+body.page-admin::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    z-index: -1;
+    animation: gradientFade 1s ease-out forwards;
+}
+
+@keyframes gradientFade {
+    from {
+        opacity: 0;
+        filter: brightness(0.3);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+</style>
+
+<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}root.style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){root.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){root.style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}}catch(e){}}document.documentElement.classList.add('theme-loaded');})();
+</script>
+	<script src="assets/js/theme-loader.js"></script>
+	<link rel="stylesheet" href="assets/css/styles.css">
+	<link rel="manifest" href="/site.webmanifest" />
+    <title>Login - Fichajes</title>
+</head>
+<body class="page-login">
+
+<div id="cookieBanner" class="cookie-banner" style="display: none;">
+    <div class="cookie-content">
+        <div class="cookie-text">
+            <span class="cookie-icon">🍪</span>
+            <p>
+                Utilizamos cookies propias y de terceros para mejorar nuestros servicios y mostrar información relacionada con sus preferencias mediante el análisis de sus hábitos de navegación. 
+                Si continúa navegando, consideramos que acepta su uso. Puede obtener más información en nuestra 
+                <a href="politica-cookies.html" target="_blank">Política de Cookies</a>.
+            </p>
+        </div>
+        <div class="cookie-buttons">
+            <button onclick="rechazarCookies()" class="cookie-btn cookie-btn-reject">Rechazar</button>
+            <button onclick="aceptarCookies()" class="cookie-btn cookie-btn-accept">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    if (!cookieConsent) {
+        setTimeout(() => {
+            document.getElementById('cookieBanner').style.display = 'block';
+        }, 1000);
+    }
+});
+
+function aceptarCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    document.getElementById('cookieBanner').style.display = 'none';
+}
+
+function rechazarCookies() {
+    localStorage.setItem('cookieConsent', 'rejected');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    document.getElementById('cookieBanner').style.display = 'none';
+}
+
+function cookiesAceptadas() {
+    return localStorage.getItem('cookieConsent') === 'accepted';
+}
+</script>
+
+    <div class="card login-card">
+        <div class="logo"><img src="/assets/img/favicon-96x96.png" sizes="96x96" style="width:15%; height: auto;"/></div>
+        <h1>Fichajes</h1>
+        
+        <div id="error" class="error"></div>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    required 
+                    placeholder="tu@email.com"
+                    autocomplete="email"
+                >
+            </div>
+            
+            <div class="input-group">
+                <label for="pin">PIN (4 dígitos)</label>
+                <input 
+                    type="password" 
+                    id="pin" 
+                    required 
+                    pattern="[0-9]{4}"
+                    maxlength="4"
+                    placeholder="••••"
+                    autocomplete="off"
+                >
+                <div class="helper-text">
+                    Introduce tu PIN de 4 dígitos
+                </div>
+            </div>
+            
+            <button type="submit" id="loginBtn" class="btn-login">
+                🔐 Entrar
+            </button>
+        </form>
+
+        <div class="forgot-pin">
+            <a href="ver-pin.html">
+                🔍 ¿Olvidaste tu PIN?
+            </a>
+        </div>
+
+		<div class="back-link">
+            <a href="index.html">← Volver al inicio</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('error');
+        const loginBtn = document.getElementById('loginBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const pin = document.getElementById('pin').value;
+            
+            if (pin.length !== 4) {
+                showError('El PIN debe tener 4 dígitos');
+                return;
+            }
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = '⏳ Verificando...';
+            errorDiv.style.display = 'none';
+            errorDiv.className = 'error';
+            
+            try {
+                const response = await fetch('api.php?action=login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, pin })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    try {
+                        const checkAusencia = await fetch('api.php?action=verificar_ausencia_usuario', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ usuario_id: data.user_id })
+                        });
+                        
+                        const ausenciaData = await checkAusencia.json();
+                        
+                        if (ausenciaData.ausencia_activa) {
+                            const tipoTexto = {
+                                'vacaciones': '🏖️ Vacaciones',
+                                'baja_laboral': '🏥 Baja Laboral',
+                                'suspension_indefinida': '⏸️ Suspensión Indefinida',
+                                'otro': '📝 Ausencia'
+                            };
+                            
+                            let mensaje = `<strong>${tipoTexto[ausenciaData.tipo]}</strong><br>`;
+                            mensaje += ausenciaData.fecha_fin 
+                                ? `Del ${ausenciaData.fecha_inicio} al ${ausenciaData.fecha_fin}` 
+                                : `Desde ${ausenciaData.fecha_inicio} — <strong>Sin fecha de fin</strong>`;
+                            mensaje += ausenciaData.motivo 
+                                ? `<br><br>📝 ${ausenciaData.motivo}` 
+                                : '';
+                            mensaje += `<br><br><small style="color: #999;">Contacte con su responsable si tiene alguna duda.</small>`;
+                            
+                            showError(mensaje, true);
+                            loginBtn.disabled = false;
+                            loginBtn.textContent = '🔐 Entrar';
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error verificando ausencia:', error);
+                    }
+
+                    loginBtn.textContent = '✓ Accediendo...';
+                    setTimeout(() => {
+                        window.location.href = 'clockin.html';
+                    }, 500);
+
+                } else {
+                    showError(data.error || 'Email o PIN incorrectos');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = '🔐 Entrar';
+                }
+            } catch (error) {
+                showError('Error de conexión. Verifica que el servidor esté corriendo.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔐 Entrar';
+            }
+        });
+        
+        function showError(message, isAusencia = false) {
+            errorDiv.innerHTML = message;
+            errorDiv.className = isAusencia ? 'error ausencia' : 'error';
+            errorDiv.style.display = 'block';
+        }
+        
+        document.getElementById('email').focus();
+    </script>
+</body>
+</html>

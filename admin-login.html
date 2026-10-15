@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+	<link rel="manifest" href="/site.webmanifest" />
+	<style>
+html{visibility:hidden;opacity:0;}
+html.theme-loaded{visibility:visible;animation:pageShow 1s ease-out forwards;background-color: #2d2d44;}
+@keyframes pageShow{from{opacity:0;}to{opacity:1;}}
+
+body.page-home::before,
+body.page-user::before,
+body.page-admin::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    z-index: -1;
+    animation: gradientFade 1s ease-out forwards;
+}
+
+@keyframes gradientFade {
+    from {
+        opacity: 0;
+        filter: brightness(0.3);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+</style>
+
+<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}root.style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){root.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){root.style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}}catch(e){}}document.documentElement.classList.add('theme-loaded');})();
+</script>
+	<script src="assets/js/theme-loader.js"></script>
+	<link rel="stylesheet" href="assets/css/styles.css">
+    <title>Login Admin - Fichajes</title>
+</head>
+<body class="page-admin-login">
+    <div class="card login-card">
+        <div class="logo">🔐</div>
+        <h1>Panel Admin</h1>
+        <p class="subtitle">Acceso solo para administradores</p>
+        
+        <div id="error" class="error"></div>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Usuario</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    required 
+                    placeholder="Administrador"
+                    autocomplete="username"
+                >
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Contraseña</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    required 
+                    placeholder="••••••••••••"
+                    autocomplete="current-password"
+                >
+            </div>
+            
+            <button type="submit" id="loginBtn" class="btn-login admin">
+                🔓 Acceder al Panel
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="index.html">← Volver al inicio</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('error');
+        const loginBtn = document.getElementById('loginBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = '⏳ Verificando...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('api.php?action=admin_login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    loginBtn.textContent = '✓ Accediendo...';
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 500);
+                } else {
+                    showError(data.error || 'Usuario o contraseña incorrectos');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = '🔓 Acceder al Panel';
+                }
+            } catch (error) {
+                showError('Error de conexión. Verifica que el servidor esté corriendo.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔓 Acceder al Panel';
+            }
+        });
+        
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        // Auto-focus en username
+        document.getElementById('username').focus();
+    </script>
+</body>
+</html>

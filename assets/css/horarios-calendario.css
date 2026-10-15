@@ -1,0 +1,319 @@
+/* ============================================================
+   Oficia Clock · Horarios y Calendario
+   Usa las variables del tema (styles.css) y respeta el modo glass.
+   ============================================================ */
+
+.hc-wrap, .hc-modal {
+    --hc-border: var(--border, rgba(0,0,0,0.09));
+    --hc-soft: var(--bg-light, #f6f7fb);
+    --hc-text: var(--text-main, #333);
+    --hc-sub: var(--text-sub, #666);
+    --hc-accent: var(--btn-in-start, #4f7cff);
+    color: var(--hc-text);
+}
+[data-theme="glass"] .hc-wrap, [data-theme="glass"] .hc-modal {
+    --hc-border: rgba(255,255,255,0.16);
+    --hc-soft: rgba(255,255,255,0.06);
+}
+
+/* ---------- Barra de herramientas ---------- */
+.hc-toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 14px;
+}
+.hc-toolbar .hc-grow { flex: 1 1 180px; }
+.hc-input, .hc-select {
+    padding: 9px 11px; border: 2px solid var(--hc-border); border-radius: 10px;
+    font-size: 14px; background: var(--card-bg, #fff); color: var(--hc-text);
+    font-family: inherit; box-sizing: border-box; min-width: 0;
+}
+.hc-input[type="time"] { width: 112px; padding: 7px 8px; }
+.hc-check { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; }
+.hc-btn {
+    padding: 9px 14px; border: none; border-radius: 10px; cursor: pointer;
+    font-weight: 700; font-size: 13px; font-family: inherit; white-space: nowrap;
+    background: var(--hc-soft); color: var(--hc-text); border: 1px solid var(--hc-border);
+    transition: transform .15s, box-shadow .15s;
+}
+.hc-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+.hc-btn.primary { background: linear-gradient(135deg, var(--btn-in-start, #56ab2f), var(--btn-in-end, #a8e063)); color: #fff; border: none; }
+.hc-btn.danger  { background: #e5484d; color: #fff; border: none; }
+.hc-btn.mini    { padding: 5px 9px; font-size: 12px; border-radius: 8px; }
+.hc-btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ---------- Leyenda y resumen ---------- */
+.hc-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 4px; font-size: 12px; color: var(--hc-sub); }
+.hc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.hc-legend i { width: 14px; height: 10px; border-radius: 3px; display: inline-block; }
+
+.hc-resumen { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 16px; }
+.hc-res-item {
+    padding: 11px 13px; border-radius: 12px; border: 1px solid var(--hc-border);
+    background: var(--hc-soft); border-left: 4px solid var(--c, #999);
+}
+.hc-res-item b { display: block; font-size: 13px; margin-bottom: 4px; }
+.hc-res-item small { color: var(--hc-sub); font-size: 12px; display: block; line-height: 1.5; }
+.hc-bar { height: 5px; border-radius: 3px; background: var(--hc-border); margin-top: 6px; overflow: hidden; }
+.hc-bar > div { height: 100%; background: var(--c, #4f7cff); border-radius: 3px; }
+
+.hc-banner {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 14px; border-radius: 12px; margin-bottom: 14px;
+    background: var(--hc-soft); border: 1px solid var(--hc-border); font-size: 14px;
+}
+.hc-banner .hc-chip { padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 13px; background: var(--card-bg, #fff); border: 1px solid var(--hc-border); }
+.hc-banner.bloq { border-color: #f3b5b7; background: rgba(229,72,77,.08); }
+
+/* ---------- FullCalendar: neutralizar estilos globales de tabla de styles.css ---------- */
+.hc-cal table { margin: 0 !important; }
+.hc-cal th, .hc-cal td { padding: 0; background: transparent; }
+/* styles.css pone th{position:sticky}: lo anulamos, pero SIN tocar el modo que
+   FullCalendar activa en Firefox (.fc-liquid-hack), que necesita position:relative */
+.hc-cal th { position: static; }
+.hc-cal .fc-liquid-hack td, .hc-cal .fc-liquid-hack th { position: relative; }
+.hc-cal tr:hover { background: transparent !important; }
+
+.hc-cal {
+    --fc-border-color: var(--hc-border);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: var(--hc-soft);
+    --fc-list-event-hover-bg-color: var(--hc-soft);
+    --fc-today-bg-color: rgba(79,124,255,0.07);
+    --fc-now-indicator-color: #e5484d;
+    --fc-button-bg-color: var(--hc-soft);
+    --fc-button-border-color: var(--hc-border);
+    --fc-button-text-color: var(--hc-text);
+    --fc-button-hover-bg-color: var(--hc-border);
+    --fc-button-hover-border-color: var(--hc-border);
+    --fc-button-active-bg-color: var(--hc-accent);
+    --fc-button-active-border-color: var(--hc-accent);
+    --fc-event-border-color: transparent;
+    font-size: 13px;
+}
+.hc-cal .fc .fc-button { font-weight: 700; font-size: 13px; border-radius: 9px; padding: 6px 11px; box-shadow: none !important; text-transform: capitalize; }
+.hc-cal .fc .fc-button-active { color: #fff; }
+.hc-cal .fc .fc-toolbar-title { font-size: 18px; font-weight: 800; text-transform: capitalize; }
+.hc-cal .fc .fc-col-header-cell-cushion { padding: 8px 4px; font-weight: 700; text-transform: capitalize; color: var(--hc-text); }
+.hc-cal .fc .fc-daygrid-day-number { color: var(--hc-sub); font-weight: 600; padding: 6px 8px; }
+.hc-cal .fc .fc-timegrid-slot { height: 2.1em; }
+.hc-cal .fc .fc-timegrid-slot-label-cushion { color: var(--hc-sub); font-size: 11px; }
+.hc-cal .fc a { color: inherit; text-decoration: none; }
+.hc-cal .fc-event { border-radius: 7px; cursor: pointer; font-weight: 600; }
+.hc-cal .fc-timegrid-event .fc-event-main { padding: 3px 5px; }
+.hc-cal .fc-daygrid-event { padding: 1px 4px; }
+
+/* Tipos de evento */
+.hc-cal .hc-especial { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.18) 0 6px, transparent 6px 12px); }
+.hc-cal .hc-real {
+    background: rgba(17,24,39,.72) !important; border: 1px dashed rgba(255,255,255,.6) !important;
+    color: #fff; opacity: .92;
+}
+.hc-cal .hc-real .fc-event-main { color: #fff; }
+.hc-cal .hc-bloqueo { background: #e5484d !important; border-color: #e5484d !important; color: #fff; }
+.hc-cal .hc-libre { background: transparent !important; border: 1.5px dashed #94a3b8 !important; color: var(--hc-sub) !important; }
+.hc-cal .hc-libre .fc-event-main, .hc-cal .hc-libre .fc-event-title { color: var(--hc-sub) !important; }
+.hc-cal .hc-festivo {
+    background: repeating-linear-gradient(135deg, rgba(245,158,11,.16) 0 8px, rgba(245,158,11,.06) 8px 16px) !important;
+    opacity: 1 !important;
+}
+.hc-cal .fc-bg-event.hc-festivo .fc-event-title { font-style: normal; font-weight: 700; font-size: 11px; color: #b45309; margin: 4px; }
+.hc-cal .hc-ausencia { color: #fff; border: none !important; }
+.hc-cal .hc-ausencia .fc-event-main, .hc-cal .hc-ausencia .fc-event-title { color: #fff; }
+.hc-cal .hc-aus-vacaciones { background: #0ea5a4 !important; }
+.hc-cal .hc-aus-baja_laboral, .hc-cal .hc-aus-baja { background: #e5484d !important; }
+.hc-cal .hc-aus-suspension_indefinida { background: #64748b !important; }
+.hc-cal .hc-aus-asuntos_propios { background: #8b5cf6 !important; }
+.hc-cal .hc-aus-otro { background: #f59e0b !important; }
+.hc-cal .hc-ausencia:not([class*="hc-aus-vac"]):not([class*="hc-aus-baj"]):not([class*="hc-aus-sus"]):not([class*="hc-aus-asu"]):not([class*="hc-aus-otr"]) { background: #f59e0b !important; }
+.hc-cal .fc-list-event.hc-real td, .hc-cal .fc-list-event.hc-ausencia td, .hc-cal .fc-list-event.hc-bloqueo td { background: transparent !important; color: var(--hc-text); }
+.hc-cal .fc-list-event.hc-ausencia .fc-list-event-title, .hc-cal .fc-list-event.hc-real .fc-list-event-title { color: var(--hc-text); }
+
+/* Vista Lista: sin fondo de color en la fila, solo el punto */
+.hc-cal .fc-list-event.hc-ausencia, .hc-cal .fc-list-event.hc-real,
+.hc-cal .fc-list-event.hc-bloqueo, .hc-cal .fc-list-event.hc-libre { background: transparent !important; border: none !important; }
+.hc-cal .fc-list-event.hc-ausencia .fc-list-event-dot { border-color: #f59e0b; }
+.hc-cal .fc-list-event.hc-aus-vacaciones .fc-list-event-dot { border-color: #0ea5a4; }
+.hc-cal .fc-list-event.hc-aus-baja_laboral .fc-list-event-dot, .hc-cal .fc-list-event.hc-aus-baja .fc-list-event-dot,
+.hc-cal .fc-list-event.hc-bloqueo .fc-list-event-dot { border-color: #e5484d; }
+.hc-cal .fc-list-event.hc-real .fc-list-event-dot { border-color: #111827; }
+.hc-cal .fc-list-event.hc-libre .fc-list-event-dot { border-color: #94a3b8; }
+.hc-cal .fc-list-event td { color: var(--hc-text) !important; }
+
+[data-theme="glass"] .hc-cal .fc-bg-event.hc-festivo .fc-event-title { color: #fde68a !important; }
+
+/* ---------- Modales del módulo ---------- */
+.hc-modal .modal-content { max-width: 720px; width: 94%; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; }
+.hc-modal.hc-modal-sm .modal-content { max-width: 460px; }
+.hc-modal h2 { margin-bottom: 6px; }
+.hc-modal .hc-sub { color: var(--text-sub, #666); font-size: 13px; margin-bottom: 14px; }
+.hc-section {
+    border: 1px solid var(--border, rgba(0,0,0,.09)); border-radius: 14px;
+    padding: 14px; margin-bottom: 14px; background: var(--bg-light, #fafbff);
+}
+[data-theme="glass"] .hc-section { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.15); }
+.hc-section > h3 { font-size: 14px; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+/* Lista de usuarios */
+.hc-user-row {
+    display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center;
+    padding: 10px 2px; border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
+}
+.hc-user-row:last-child { border-bottom: none; }
+.hc-dot { width: 12px; height: 12px; border-radius: 50%; }
+.hc-user-row .hc-name { font-weight: 700; font-size: 14px; line-height: 1.25; }
+.hc-user-row .hc-meta { font-size: 12px; color: var(--text-sub, #777); font-weight: 500; }
+.hc-warn { color: #d97706; font-weight: 700; }
+
+/* Interruptor */
+.hc-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; display: inline-block; }
+.hc-switch input { opacity: 0; width: 0; height: 0; }
+.hc-switch span {
+    position: absolute; inset: 0; border-radius: 24px; background: #cbd5e1; cursor: pointer; transition: background .2s;
+}
+.hc-switch span::before {
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+    border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.hc-switch input:checked + span { background: #e5484d; }
+.hc-switch input:checked + span::before { transform: translateX(20px); }
+.hc-switch-label { font-size: 11px; font-weight: 700; color: var(--text-sub, #777); text-align: center; display: block; margin-top: 2px; }
+
+/* Editor semanal */
+.hc-dia {
+    display: grid; grid-template-columns: 110px 1fr auto; gap: 10px; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
+}
+.hc-dia:last-child { border-bottom: none; }
+.hc-dia-nombre { font-weight: 700; font-size: 14px; }
+.hc-dia-nombre small { display: block; font-weight: 600; color: var(--text-sub, #888); font-size: 11px; }
+.hc-tramos { display: flex; flex-wrap: wrap; gap: 6px; }
+.hc-tramo {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 6px;
+    border-radius: 10px; background: var(--card-bg, #fff); border: 1px solid var(--border, rgba(0,0,0,.1));
+}
+.hc-tramo .hc-x { border: none; background: none; cursor: pointer; font-size: 16px; color: #e5484d; padding: 0 4px; line-height: 1; }
+.hc-tramo.noct { border-color: #9b5de5; }
+.hc-vacio { font-size: 12px; color: var(--text-muted, #aaa); font-style: italic; }
+.hc-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.hc-total { font-size: 14px; font-weight: 700; padding: 10px 0 0; }
+.hc-chk-list { max-height: 160px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; }
+
+.hc-detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,.07)); font-size: 14px; }
+.hc-detail-row span:first-child { color: var(--text-sub, #777); }
+.hc-detail-row span:last-child { font-weight: 700; text-align: right; }
+.fc-theme-standard .fc-popover{
+    background: whitesmoke !important;
+    border: 1px solid var(--hc-border);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    overflow: hidden;
+    z-index: 50;
+}
+@media (max-width: 640px) {
+    .hc-dia { grid-template-columns: 1fr auto; }
+    .hc-dia .hc-tramos { grid-column: 1 / -1; order: 3; }
+    .hc-cal .fc .fc-toolbar { flex-direction: column; gap: 8px; }
+    .hc-cal .fc .fc-toolbar-title { font-size: 16px; }
+    .hc-user-row { grid-template-columns: 12px 1fr auto; }
+    .hc-user-row .hc-edit-btn { grid-column: 2 / -1; justify-self: start; }
+}
+
+/* ---------- Compatibilidad con reglas globales de styles.css ---------- */
+/* styles.css pone input/select a width:100% + padding 15px y label a display:block */
+.hc-wrap input[type="checkbox"], .hc-wrap input[type="radio"],
+.hc-modal input[type="checkbox"], .hc-modal input[type="radio"] {
+    width: auto; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--btn-in-start, #4f7cff);
+}
+.hc-wrap .hc-input, .hc-wrap .hc-select, .hc-modal .hc-input, .hc-modal .hc-select { font-size: 14px; }
+.hc-wrap .hc-select, .hc-modal .hc-select { width: auto; }
+.hc-modal select.hc-select, .hc-modal input.hc-input:not([type="time"]):not([type="number"]) { width: 100%; }
+.hc-toolbar .hc-input.hc-grow, .hc-toolbar .hc-select.hc-grow { width: auto; }
+.hc-modal input[type="number"].hc-input { width: 74px; }
+.hc-check, .hc-modal label.hc-check { display: inline-flex; margin: 0; color: var(--text-main, #333); font-size: 13px; }
+.hc-switch { margin: 0; }
+/* styles.css oculta TODAS las tablas en móvil (<=768px); FullCalendar las necesita */
+@media (max-width: 768px) {
+    .hc-cal table { display: table !important; }
+}
+
+/* Etiqueta de origen en la lista de festivos */
+.hc-tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700;
+          background: #e0f2fe; color: #0369a1; vertical-align: middle; }
+.hc-tag.hc-tag-local { background: #fef3c7; color: #92400e; }
+.hc-modal .hc-section > h3 select.hc-select { width: auto; flex: 0 0 auto; font-size: 13px; padding: 5px 8px; }
+.hc-section > h3 > span { white-space: nowrap; }
+/* ---------- Ventana "+N más" (popover) con fondo opaco ---------- */
+.hc-cal .fc-popover {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--hc-border);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    overflow: hidden;
+    z-index: 50;
+}
+.hc-cal .fc-popover-header { background: var(--hc-soft); padding: 6px 10px; font-weight: 700; }
+.hc-cal .fc-popover-body { max-height: 320px; overflow-y: auto; }
+[data-theme="glass"] .hc-cal .fc-popover { background: rgba(30,35,50,0.97); }
+
+
+/* ================= MODO COMPACTO (móvil / pantallas estrechas) ================= */
+/* Barra superior más ligera: el título no se parte en 3 líneas */
+.hc-cal.hc-compacto .fc-toolbar { gap: 6px; margin-bottom: 10px !important; }
+.hc-cal.hc-compacto .fc-toolbar-title { font-size: 17px !important; white-space: nowrap; }
+.hc-cal.hc-compacto .fc-button { padding: 5px 9px !important; font-size: 13px !important; }
+.hc-cal.hc-compacto .fc-footer-toolbar { margin-top: 10px !important; justify-content: center; }
+/* Botones Mes / Semana / Lista encima del calendario (debajo de la barra del título) */
+.hc-cal.hc-compacto .fc-header-toolbar { order: 0; }
+.hc-cal.hc-compacto .fc-footer-toolbar { order: 1; margin: 0 0 10px !important; }
+.hc-cal.hc-compacto .fc-view-harness { order: 2; }
+ 
+/* Mes y semana: ocultamos los eventos de FullCalendar y pintamos los nuestros */
+.hc-cal.hc-compacto .fc-dayGridMonth-view .fc-daygrid-day-events,
+.hc-cal.hc-compacto .fc-semanaCompacta-view .fc-daygrid-day-events { display: none; }
+.hc-cal.hc-compacto .fc-bg-event .fc-event-title { display: none; }   /* nombre del festivo: ya se ve rayado */
+.hc-cal.hc-compacto .fc-daygrid-day { cursor: pointer; }
+.hc-cal.hc-compacto .fc-daygrid-day-top { justify-content: center; }
+.hc-cal.hc-compacto .fc-daygrid-day-number { font-size: 13px; padding: 4px 2px 2px; }
+.hc-cal.hc-compacto .fc-col-header-cell-cushion { font-size: 11px; padding: 4px 0; }
+.hc-cal.hc-compacto .fc-day-today .fc-daygrid-day-number {
+    background: var(--hc-accent); color: #fff; border-radius: 50%; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center; padding: 0; margin-top: 3px;
+}
+.hc-cal.hc-compacto .fc-daygrid-day.hc-sel { box-shadow: inset 0 0 0 2px var(--hc-accent); }
+ 
+/* Mes: puntos */
+.hc-cal .hc-cmp-mes { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; padding: 0 3px 6px; min-height: 26px; }
+.hc-cal .hc-punto, .hc-diap .hc-punto { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: 0 0 auto; }
+.hc-punto.hc-p-libre { border: 1.5px dashed #94a3b8; width: 5px; height: 5px; }
+.hc-punto.hc-p-real { border-radius: 2px; }
+.hc-punto.hc-p-ausencia { border-radius: 2px; width: 10px; }
+.hc-cal .hc-mas { font-size: 9px; line-height: 7px; color: var(--hc-sub); font-weight: 700; }
+ 
+/* Semana: fichas con iniciales y horas */
+.hc-cal .fc-semanaCompacta-view .fc-daygrid-day-frame { min-height: 160px; }
+.hc-cal .hc-cmp-semana { display: flex; flex-direction: column; gap: 3px; padding: 0 2px 6px; }
+.hc-cal .hc-ficha {
+    background: var(--c); color: #fff; border-radius: 6px; padding: 3px 2px; text-align: center; line-height: 1.15;
+    overflow: hidden; white-space: nowrap;
+}
+.hc-cal .hc-ficha b { display: block; font-size: 11px; letter-spacing: .3px; }
+.hc-cal .hc-ficha small { display: block; font-size: 9px; opacity: .92; }
+.hc-cal .hc-ficha.hc-f-especial { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 5px, transparent 5px 10px); }
+.hc-cal .hc-ficha.hc-f-libre { background: transparent; color: var(--hc-sub); border: 1.5px dashed #94a3b8; }
+.hc-cal .hc-ficha.hc-f-real { outline: 1.5px dashed rgba(255,255,255,.6); outline-offset: -3px; }
+ 
+/* Panel del día seleccionado (debajo del calendario) */
+.hc-diap { margin-top: 12px; border: 1px solid var(--hc-border); border-radius: 12px; overflow: hidden; background: var(--card-bg, #fff); }
+.hc-diap-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--hc-soft); }
+.hc-diap-cab b { font-size: 14px; }
+.hc-diap-cab b::first-letter { text-transform: uppercase; }
+.hc-diap-cab .hc-btn { padding: 5px 10px; font-size: 12px; }
+.hc-diap-fila {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; border-top: 1px solid var(--hc-border);
+    background: transparent; color: var(--hc-text); text-align: left; font: inherit; font-size: 14px; cursor: pointer;
+}
+.hc-diap-fila:active { background: var(--hc-soft); }
+.hc-diap-fila .hc-punto { width: 10px; height: 10px; }
+.hc-diap-hora { flex: 0 0 92px; font-variant-numeric: tabular-nums; color: var(--hc-sub); font-size: 13px; }
+.hc-diap-txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.hc-diap-vacio { padding: 14px 12px; color: var(--hc-sub); font-size: 14px; border-top: 1px solid var(--hc-border); }

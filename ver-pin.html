@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+	<link rel="manifest" href="/site.webmanifest" />    <title>Ver mi PIN de Fichaje</title>
+<style>
+html{visibility:hidden;opacity:0;}
+html.theme-loaded{visibility:visible;animation:pageShow 1s ease-out forwards;background-color: #2d2d44;}
+@keyframes pageShow{from{opacity:0;}to{opacity:1;}}
+
+body.page-home::before,
+body.page-user::before,
+body.page-admin::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    z-index: -1;
+    animation: gradientFade 1s ease-out forwards;
+}
+
+@keyframes gradientFade {
+    from {
+        opacity: 0;
+        filter: brightness(0.3);
+    }
+    to {
+        opacity: 1;
+        filter: brightness(1);
+    }
+}
+</style>
+
+<script>
+(function(){const theme=localStorage.getItem('customTheme');if(theme){try{const t=JSON.parse(theme);const root=document.documentElement;for(const[key,val]of Object.entries(t)){if(key==='_theme_mode'){if(val==='glass')root.setAttribute('data-theme','glass');continue}root.style.setProperty(`--${key}`,val)}if(t['bg-grad-start']&&t['bg-grad-end']){root.style.setProperty('--bg-gradient',`linear-gradient(135deg, ${t['bg-grad-start']} 0%, ${t['bg-grad-end']} 100%)`)}if(t['bg-admin-start']&&t['bg-admin-end']){root.style.setProperty('--bg-admin-gradient',`linear-gradient(135deg, ${t['bg-admin-start']} 0%, ${t['bg-admin-end']} 100%)`)}}catch(e){}}document.documentElement.classList.add('theme-loaded');})();
+</script>
+	<script src="assets/js/theme-loader.js"></script>
+	<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="page-login">
+<!-- HTML del banner -->
+<div id="cookieBanner" class="cookie-banner" style="display: none;">
+    <div class="cookie-content">
+        <div class="cookie-text">
+            <span class="cookie-icon">🍪</span>
+            <p>
+                Utilizamos cookies propias y de terceros para mejorar nuestros servicios y mostrar información relacionada con sus preferencias mediante el análisis de sus hábitos de navegación. 
+                Si continúa navegando, consideramos que acepta su uso. Puede obtener más información en nuestra 
+                <a href="politica-cookies.html" target="_blank">Política de Cookies</a>.
+            </p>
+        </div>
+        <div class="cookie-buttons">
+            <button onclick="rechazarCookies()" class="cookie-btn cookie-btn-reject">Rechazar</button>
+            <button onclick="aceptarCookies()" class="cookie-btn cookie-btn-accept">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+<!-- CSS (añadir dentro de
+
+<!-- JavaScript (añadir antes de </body>) -->
+<script>
+// Comprobar si ya aceptó/rechazó cookies
+document.addEventListener('DOMContentLoaded', function() {
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    
+    if (!cookieConsent) {
+        // Mostrar banner después de 1 segundo
+        setTimeout(() => {
+            document.getElementById('cookieBanner').style.display = 'block';
+        }, 1000);
+    }
+});
+
+function aceptarCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    document.getElementById('cookieBanner').style.display = 'none';
+    
+    // Aquí puedes activar Google Analytics u otras cookies
+    // activarAnalytics();
+}
+
+function rechazarCookies() {
+    localStorage.setItem('cookieConsent', 'rejected');
+    localStorage.setItem('cookieConsentDate', new Date().toISOString());
+    document.getElementById('cookieBanner').style.display = 'none';
+    
+    // Aquí puedes desactivar cookies no esenciales
+    // desactivarAnalytics();
+}
+
+// Función para verificar si aceptó cookies (usar antes de cargar analytics, etc.)
+function cookiesAceptadas() {
+    return localStorage.getItem('cookieConsent') === 'accepted';
+}
+</script>
+    <div class="container login-card">
+        <div class="logo">🔐</div>
+        <h1>Consulta tu PIN</h1>
+        <p class="subtitle">Introduce tu email para ver tu PIN de fichaje</p>
+        
+        <div id="error" class="error"></div>
+        
+        <div id="formSection">
+            <div class="info-box">
+                💡 <strong>¿Primera vez?</strong> Si es tu primer día, puede que tu PIN aún no esté generado. Contacta con tu administrador.
+            </div>
+            
+            <form id="lookupForm">
+                <div class="input-group">
+                    <label for="email">Email corporativo</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        required 
+                        placeholder="tu@email.com"
+                        autocomplete="email"
+                    >
+                </div>
+                
+                <button type="submit" id="submitBtn" class="big-button btn-primary">
+                    🔍 Ver mi PIN
+                </button>
+            </form>
+        </div>
+
+        <div id="result" class="result pin-result">
+            <h2>Tu PIN de Fichaje</h2>
+            <div class="pin-display" id="pinDisplay">----</div>
+            <div class="user-info">
+                <strong id="userName"></strong><br>
+                <span id="userEmail"></span>
+            </div>
+            <div class="actions">
+                <button class="btn-secondary" onclick="copyPin()">
+                    📋 Copiar PIN
+                </button>
+                <button onclick="goToLogin()">
+                    ➡️ Ir a Fichar
+                </button>
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn-secondary" onclick="reset()">
+                    🔙 Consultar otro PIN
+                </button>
+            </div>
+        </div>
+		<div class="back-link">
+            <a href="index.html">← Volver al inicio</a>
+        </div>
+    </div>
+
+    <script>
+        let currentPin = '';
+
+        document.getElementById('lookupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const errorDiv = document.getElementById('error');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="spinner"></div> Buscando...';
+            
+            try {
+                const response = await fetch('api.php?action=get_pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Mostrar PIN
+                    currentPin = data.pin;
+                    document.getElementById('pinDisplay').textContent = data.pin;
+                    document.getElementById('userName').textContent = data.nombre;
+                    document.getElementById('userEmail').textContent = data.email;
+                    
+                    document.getElementById('formSection').style.display = 'none';
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    showError(data.error || 'Usuario no encontrado');
+                }
+            } catch (error) {
+                showError('Error de conexión. Verifica que el servidor esté corriendo.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🔍 Ver mi PIN';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function copyPin() {
+            navigator.clipboard.writeText(currentPin);
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✓ Copiado';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        }
+
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        function reset() {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('email').value = '';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Auto-focus
+        document.getElementById('email').focus();
+    </script>
+</body>
+</html>

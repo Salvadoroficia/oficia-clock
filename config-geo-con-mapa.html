@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/assets/img/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+	<link rel="manifest" href="/site.webmanifest" />
+	<script src="assets/js/theme-loader.js"></script>
+    <title>Configurar Geolocalización con Mapa</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; width: 26px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #56ab2f;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .map-instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .map-instructions ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .map-instructions li {
+            margin: 5px 0;
+        }
+        
+        .location-input {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .form-group input {
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .locations-list {
+            margin-top: 20px;
+        }
+        
+        .location-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .location-item:hover {
+            background: #e9ecef;
+        }
+        
+        .location-info {
+            flex: 1;
+        }
+        
+        .location-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .location-coords {
+            font-family: monospace;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .location-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .radius-input {
+            width: 150px;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        
+        .current-location-btn {
+            background: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .current-location-btn:hover {
+            background: #1976d2;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🗺️ Configuración de Geolocalización</h1>
+            <p style="color: #666; margin-bottom: 20px;">Configura las ubicaciones permitidas con un simple click en el mapa</p>
+            
+            <div class="info-box">
+                <strong>ℹ️ ¿Cómo funciona?</strong><br>
+                La geolocalización valida que los empleados fichan desde ubicaciones autorizadas.
+                Si NO configuras ubicaciones, se permitirá fichar desde cualquier lugar.
+            </div>
+            
+            <!-- Configuración básica -->
+            <h2>⚙️ Configuración General</h2>
+            
+            <div class="settings-row">
+                <div>
+                    <strong>Habilitar Geolocalización</strong><br>
+                    <span style="font-size: 13px; color: #666;">Captura la ubicación del empleado al fichar</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="geoEnabled" onchange="toggleGeoOptions()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div id="geoOptionsPanel" style="display: none;">
+                <div class="settings-row">
+                    <div>
+                        <strong>Hacer Obligatoria</strong><br>
+                        <span style="font-size: 13px; color: #666;">Los empleados no podrán fichar sin ubicación</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="geoRequired">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="settings-row">
+                    <div>
+                        <strong>Radio de Validación</strong><br>
+                        <span style="font-size: 13px; color: #666;">Distancia máxima permitida desde las ubicaciones (en metros)</span>
+                    </div>
+                    <input type="number" id="geoRadius" class="radius-input" value="100" min="10" max="5000" step="10">
+                </div>
+                
+                <!-- MAPA -->
+                <h2 style="margin-top: 30px;">📍 Ubicaciones Permitidas</h2>
+                
+                <div class="map-instructions">
+                    <strong>Instrucciones:</strong>
+                    <ul>
+                        <li>🔍 <strong>Busca tu ubicación</strong> en el cuadro de arriba del mapa</li>
+                        <li>📍 <strong>Click en el mapa</strong> para agregar una ubicación</li>
+                        <li>🎯 <strong>Click en "📍 Mi Ubicación"</strong> para usar tu posición actual</li>
+                        <li>✏️ Escribe un nombre y guarda la ubicación</li>
+                    </ul>
+                </div>
+                
+                <button class="current-location-btn" onclick="useMyLocation()">
+                    📍 Usar Mi Ubicación Actual
+                </button>
+                
+                <div id="map"></div>
+                
+                <div class="location-input" id="locationInput" style="display: none;">
+                    <div class="form-group">
+                        <label>Nombre de la Ubicación:</label>
+                        <input type="text" id="newLocationName" placeholder="Ej: Oficina Principal, Almacén...">
+                    </div>
+                    <div class="form-group">
+                        <label>Latitud:</label>
+                        <input type="text" id="newLocationLat" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Longitud:</label>
+                        <input type="text" id="newLocationLon" readonly>
+                    </div>
+                    <button class="btn btn-success" onclick="saveLocation()">
+                        ➕ Agregar
+                    </button>
+                </div>
+                
+                <!-- Lista de ubicaciones -->
+                <div class="locations-list" id="locationsList">
+                    <h3 style="margin-bottom: 15px;">Ubicaciones Guardadas:</h3>
+                    <div id="locationsContent">
+                        <p style="color: #999; font-style: italic;">No hay ubicaciones configuradas. Click en el mapa para agregar.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="message" class="message"></div>
+            
+            <!-- Botones de acción -->
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button class="btn btn-success" onclick="guardarConfiguracion()" style="flex: 1;">
+                    💾 Guardar Configuración
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='admin.html'" style="flex: 1;">
+                    ← Volver al Admin
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        let map;
+        let markers = [];
+        let allowedLocations = [];
+        let tempMarker = null;
+        let clickedCoords = null;
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', async () => {
+            await cargarConfiguracion();
+        });
+        
+        async function cargarConfiguracion() {
+            try {
+                const response = await fetch('api.php?action=get_geolocation_settings');
+                const data = await response.json();
+                
+                if (data.success && data.settings) {
+                    document.getElementById('geoEnabled').checked = data.settings.enabled;
+                    document.getElementById('geoRequired').checked = data.settings.required;
+                    document.getElementById('geoRadius').value = data.settings.validation_radius || 100;
+                    
+                    allowedLocations = data.settings.allowed_locations || [];
+                    
+                    toggleGeoOptions();
+                    renderLocations();
+                }
+            } catch (error) {
+                console.error('Error cargando configuración:', error);
+            }
+        }
+        
+        function toggleGeoOptions() {
+            const enabled = document.getElementById('geoEnabled').checked;
+            const panel = document.getElementById('geoOptionsPanel');
+            
+            panel.style.display = enabled ? 'block' : 'none';
+            
+            if (enabled && !map) {
+                // Inicializar mapa
+                setTimeout(() => initMap(), 100);
+            }
+        }
+        
+        function initMap() {
+            // Coordenadas por defecto: España
+            const defaultLat = 40.4168;
+            const defaultLon = -3.7038;
+            
+            map = L.map('map').setView([defaultLat, defaultLon], 6);
+            
+            // OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19,
+                referrerPolicy: 'strict-origin-when-cross-origin'
+            }).addTo(map);
+            
+            // Click en el mapa
+            map.on('click', function(e) {
+                onMapClick(e.latlng);
+            });
+            
+            // Cargar marcadores existentes
+            loadMarkers();
+        }
+        
+        function onMapClick(latlng) {
+            clickedCoords = latlng;
+            
+            // Remover marcador temporal anterior
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+            }
+            
+            // Agregar marcador temporal
+            tempMarker = L.marker([latlng.lat, latlng.lng], {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                })
+            }).addTo(map);
+            
+            // Mostrar formulario
+            document.getElementById('locationInput').style.display = 'grid';
+            document.getElementById('newLocationLat').value = latlng.lat.toFixed(6);
+            document.getElementById('newLocationLon').value = latlng.lng.toFixed(6);
+            document.getElementById('newLocationName').value = '';
+            document.getElementById('newLocationName').focus();
+        }
+        
+        function useMyLocation() {
+            if (!navigator.geolocation) {
+                showMessage('❌ Tu navegador no soporta geolocalización', 'error');
+                return;
+            }
+            
+            showMessage('🔄 Obteniendo tu ubicación...', 'success');
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const latlng = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    map.setView([latlng.lat, latlng.lng], 16);
+                    onMapClick(latlng);
+                    
+                    showMessage('✅ Ubicación obtenida. Escribe un nombre y guárdala.', 'success');
+                },
+                (error) => {
+                    showMessage('❌ No se pudo obtener tu ubicación. Habilita los permisos.', 'error');
+                }
+            );
+        }
+        
+        function saveLocation() {
+            const name = document.getElementById('newLocationName').value.trim();
+            const lat = parseFloat(document.getElementById('newLocationLat').value);
+            const lon = parseFloat(document.getElementById('newLocationLon').value);
+            
+            if (!name) {
+                showMessage('❌ Por favor, escribe un nombre para la ubicación', 'error');
+                return;
+            }
+            
+            // Agregar a la lista
+            allowedLocations.push({
+                name: name,
+                latitude: lat,
+                longitude: lon
+            });
+            
+            // Limpiar formulario
+            document.getElementById('locationInput').style.display = 'none';
+            document.getElementById('newLocationName').value = '';
+            
+            // Remover marcador temporal
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+                tempMarker = null;
+            }
+            
+            // Recargar marcadores
+            loadMarkers();
+            renderLocations();
+            
+            showMessage(`✅ Ubicación "${name}" agregada correctamente`, 'success');
+        }
+        
+        function loadMarkers() {
+            // Limpiar marcadores anteriores
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            
+            // Agregar marcadores de ubicaciones guardadas
+            allowedLocations.forEach((loc, index) => {
+                const marker = L.marker([loc.latitude, loc.longitude], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map);
+                
+                marker.bindPopup(`<strong>${loc.name}</strong><br>${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`);
+                markers.push(marker);
+            });
+            
+            // Ajustar vista si hay ubicaciones
+            if (allowedLocations.length > 0) {
+                const bounds = L.latLngBounds(allowedLocations.map(l => [l.latitude, l.longitude]));
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+        
+        function renderLocations() {
+            const content = document.getElementById('locationsContent');
+            
+            if (allowedLocations.length === 0) {
+                content.innerHTML = '<p style="color: #999; font-style: italic;">No hay ubicaciones configuradas. Click en el mapa para agregar.</p>';
+                return;
+            }
+            
+            let html = '';
+            allowedLocations.forEach((loc, index) => {
+                html += `
+                    <div class="location-item">
+                        <div class="location-info">
+                            <div class="location-name">${loc.name}</div>
+                            <div class="location-coords">${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}</div>
+                        </div>
+                        <div class="location-actions">
+                            <button class="btn btn-danger" onclick="removeLocation(${index})">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+        }
+        
+        function removeLocation(index) {
+            if (confirm(`¿Eliminar "${allowedLocations[index].name}"?`)) {
+                allowedLocations.splice(index, 1);
+                loadMarkers();
+                renderLocations();
+                showMessage('✅ Ubicación eliminada', 'success');
+            }
+        }
+        
+        async function guardarConfiguracion() {
+            const enabled = document.getElementById('geoEnabled').checked;
+            const required = document.getElementById('geoRequired').checked;
+            const radius = parseInt(document.getElementById('geoRadius').value);
+            
+            try {
+                const response = await fetch('api.php?action=set_geolocation_settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enabled: enabled,
+                        required: required,
+                        allowed_locations: allowedLocations,
+                        validation_radius: radius,
+                        show_map: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`
+                        ✅ Configuración guardada correctamente<br>
+                        • Geolocalización: ${enabled ? 'Habilitada' : 'Deshabilitada'}<br>
+                        • Obligatoria: ${required ? 'Sí' : 'No'}<br>
+                        • Ubicaciones: ${allowedLocations.length}<br>
+                        • Radio: ${radius}m
+                    `, 'success');
+                } else {
+                    showMessage('❌ Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión: ' + error.message, 'error');
+            }
+        }
+        
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.innerHTML = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+            
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
